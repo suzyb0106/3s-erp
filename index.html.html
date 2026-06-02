@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거래처 관리 및 서비스 통계 시스템 v2.1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" rel="stylesheet">
+<style>
+:root {
+  --sb-w: 240px;
+  --bg: #f8fafc;
+  --sb-wash: #f0f7ff; 
+  --card: #ffffff;
+  --card2: #f1f5f9;
+  --card3: #e2e8f0;
+  --border: #e2e8f0;
+  --sb-divider: #dbeafe;
+  --border2: #cbd5e1;
+  --blue: #2563eb; 
+  --blue-soft: #60a5fa; 
+  --blue-g: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+  --blue-gx: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+  --dash-bg: #ffffff;
+  --dash-border: #e2e8f0;
+  --dash-text: #1e293b;
+  --teal: #0d9488;
+  --purple: #7c3aed;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --text: #1e293b; 
+  --text-soft: #475569;
+  --text-header: #0f172a; 
+  --text-active: #ffffff; 
+  --text2: #475569;
+  --text3: #94a3b8;
+  --r: 12px;
+  --r-sm: 8px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background: var(--bg); color: var(--text); display: flex; font-size: 14px; min-height: 100vh; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+/* ══════════ SIDEBAR ══════════ */
+.sb { width: var(--sb-w); background: var(--sb-wash); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 60; border-right: 1px solid var(--sb-divider); }
+.sb-logo, .sb-user { border-bottom: 1px solid var(--sb-divider); }
+.sb-logo { padding: 22px 18px 18px; display: flex; align-items: center; gap: 11px; }
+.sb-logo-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--blue-g); display: flex; align-items: center; justify-content: center; font-size: 17px; color: #fff; flex-shrink: 0; box-shadow: 0 4px 12px rgba(37,99,235,0.15); }
+.sb-logo-text { font-size: 14px; font-weight: 700; color: var(--text-header); line-height: 1.25; letter-spacing: -0.3px; }
+.sb-logo-text small { display: block; font-size: 10px; color: var(--text-soft); font-weight: 400; margin-top: 1px; letter-spacing: 0.3px; }
+.sb-user { padding: 14px 18px; display: flex; align-items: center; gap: 9px; }
+.sb-av { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-g); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.sb-uname { font-size: 13px; font-weight: 600; color: var(--text-header); }
+.sb-urole { font-size: 10px; color: var(--text-soft); margin-top: 1px; }
+.sb-badge { margin-left: auto; font-size: 10px; padding: 2px 7px; border-radius: 10px; background: rgba(37,99,235,0.15); color: #1e3a8a; font-weight: 600; }
+.sb-nav { flex: 1; padding: 10px; overflow-y: auto; }
+.sb-section { padding: 14px 10px 5px; font-size: 9px; color: var(--text-soft); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600; }
+.sb-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 9px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 1px; position: relative; white-space: nowrap; }
+.sb-item i { font-size: 16px; flex-shrink: 0; }
+.sb-item:hover { background: rgba(37,99,235,0.05); color: var(--blue); }
+.sb-item.active { background: var(--blue-g); color: var(--text-active); font-weight: 600; box-shadow: 0 4px 6px rgba(37,99,235,0.15); }
+.sb-bottom { padding: 12px 10px; border-top: 1px solid var(--sb-divider); display: flex; flex-direction: column; gap: 4px; }
+.sb-action { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.sb-action:hover { background: rgba(37,99,235,0.05); color: var(--blue); }
+
+/* ══════════ MAIN ══════════ */
+.main { margin-left: var(--sb-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: #ffffff; border-bottom: 1px solid var(--border); padding: 0 26px; height: 58px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02); }
+.topbar-title { font-size: 16px; font-weight: 700; color: var(--text-header); letter-spacing: -0.4px; }
+.topbar-breadcrumb { display: flex; align-items: center; gap: 6px; }
+.tb-sep { color: var(--text3); font-size: 12px; }
+.tb-cur { font-size: 13px; color: var(--text2); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; border-radius: var(--r-sm); border: 1px solid var(--border2); background: #ffffff; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
+.btn:hover { background: var(--card2); color: var(--text); border-color: var(--blue); }
+.btn-primary { background: var(--blue-g); color: #fff; border-color: transparent; box-shadow: 0 2px 4px rgba(59,130,246,0.15); }
+.btn-primary:hover { opacity: 0.9; color: #fff; border-color: transparent; box-shadow: 0 4px 6px rgba(59,130,246,0.25); }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text2); }
+.btn-ghost:hover { background: #eff6ff; border-color: var(--blue); color: var(--blue); }
+.btn-danger { background: #fef2f2; color: var(--red); border-color: #fca5a5; }
+.btn-danger:hover { background: #fee2e2; }
+
+/* PAGE */
+.page { display: none; padding: 24px 26px 40px; }
+.page.active { display: block; }
+
+/* STAT ROW */
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--dash-bg); border-radius: var(--r); border: 1px solid var(--dash-border); padding: 18px 20px; position: relative; overflow: hidden; cursor: default; transition: transform 0.2s, box-shadow 0.2s; box-shadow: var(--shadow); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--border2); }
+.stat-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: #f8fafc; box-shadow: 0 2px 4px rgba(0,0,0,0.01); border: 1px solid var(--border); }
+.si-blue  { color: var(--blue); }
+.si-amber { color: var(--amber); }
+.si-teal  { color: var(--teal); }
+.si-green { color: var(--green); }
+.si-purple { color: var(--purple); }
+.stat-pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; background: #f1f5f9; border: 1px solid var(--border); color: var(--text2); }
+.stat-val { font-size: 28px; font-weight: 800; color: var(--dash-text); letter-spacing: -1px; line-height: 1; }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 6px; font-weight: 500; }
+
+/* SECTION HEADER */
+.section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-hd h2 { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.section-hd h2 i { color: var(--blue); font-size: 16px; }
+
+/* FILTER BAR */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.search-wrap { position: relative; flex: 1; min-width: 180px; }
+.search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 15px; pointer-events: none; }
+.search-input { width: 100%; padding: 8px 12px 8px 33px; font-size: 13px; border: 1px solid var(--border2); border-radius: var(--r-sm); background: var(--card); color: var(--text); outline: none; font-family: inherit; transition: border-color 0.15s; }
+.search-input::placeholder { color: var(--text3); }
+.search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.fsel { padding: 8px 11px; font-size: 13px; border: 1px solid var(--border2); border-radius: var(--r-sm); background: var(--card); color: var(--text2); outline: none; cursor: pointer; font-family: inherit; }
+.fsel:focus { border-color: var(--blue); }
+.count-lbl { font-size: 12px; color: var(--text2); margin-left: auto; font-weight: 500; }
+
+/* CARDS GRID */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(315px, 1fr)); gap: 15px; }
+
+/* CLIENT CARD */
+.cc { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: all 0.2s; position: relative; box-shadow: var(--shadow); }
+.cc:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--border2); }
+.cc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--r) var(--r) 0 0; }
+.cc.gS::before { background: linear-gradient(90deg,#fbbf24,#f59e0b); }
+.cc.gA::before { background: var(--blue-g); }
+.cc.gB::before { background: linear-gradient(90deg,#34d399,#10b981); }
+.cc.gC::before { background: linear-gradient(90deg,#94a3b8,#64748b); }
+
+.cc-head { padding: 15px 16px 12px; display: flex; align-items: flex-start; gap: 11px; }
+.cc-avatar { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; letter-spacing: -0.5px; }
+.av0 { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.av1 { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.av2 { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.av3 { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.av4 { background: #f0fdfa; color: #0d9488; border: 1px solid #ccfbf1; }
+.cc-name-block { flex: 1; min-width: 0; }
+.cc-name { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-mgr { font-size: 12px; color: var(--text2); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+.cc-mgr i { font-size: 11px; color: var(--text3); }
+
+.gp { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.5px; flex-shrink: 0; }
+.gp.gS { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.gp.gA { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.gp.gB { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.gp.gC { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+.cc-divider { height: 1px; background: var(--border); margin: 0 16px; }
+.cc-body { padding: 11px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.ir { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.ir i { font-size: 13px; color: var(--text2); flex-shrink: 0; margin-top: 2px; }
+.ik { color: var(--text2); min-width: 56px; flex-shrink: 0; font-size: 11px; margin-top: 2px; font-weight: 500; }
+.iv { color: var(--text); font-size: 13px; margin-left: auto; text-align: right; font-weight: 600; }
+.dtags { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+.dt { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+.dt.r2 { background: var(--bg); color: var(--text2); border: 1px solid var(--border); font-weight: 500; }
+.cc-note-area { background: #f8fafc; border: 1px dashed var(--border2); padding: 8px 10px; border-radius: var(--r-sm); font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.4; word-break: break-all; }
+.cc-foot { padding: 9px 16px; border-top: 1px solid var(--border); background: #fafafa; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.chip { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: #ffffff; color: var(--text2); border: 1px solid var(--border2); }
+.sales-lbl { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 3px; font-weight: 500; cursor: pointer; }
+.sales-lbl:hover b { text-decoration: underline; }
+.sales-lbl b { color: var(--blue); font-weight: 700; }
+.cc-btns { display: flex; gap: 4px; margin-left: auto; }
+.ibt { width: 27px; height: 27px; border-radius: 7px; border: 1px solid var(--border); background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.15s; flex-shrink: 0; }
+.ibt:hover { background: #eff6ff; color: var(--blue); border-color: #bfdbfe; }
+.ibt.del:hover { background: #fef2f2; color: var(--red); border-color: #fca5a5; }
+
+/* ══════════ SECTION CARD ══════════ */
+.sc { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); padding: 22px 24px; margin-bottom: 18px; box-shadow: var(--shadow); }
+.sc-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.sc-title i { color: var(--blue); font-size: 18px; }
+.sc-desc { font-size: 13px; color: var(--text2); margin-bottom: 18px; line-height: 1.65; }
+
+/* DROP ZONE */
+.drop-zone { border: 2px dashed #bfdbfe; border-radius: var(--r); padding: 44px 20px; text-align: center; cursor: pointer; transition: all 0.15s; color: var(--text2); background: #f8fafc; }
+.drop-zone:hover, .drop-zone.drag { border-color: var(--blue); background: #eff6ff; color: var(--blue); }
+.drop-zone i { font-size: 36px; margin-bottom: 10px; display: block; color: var(--blue); }
+.drop-zone p { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.drop-zone small { font-size: 12px; color: var(--text3); }
+
+/* TABLE */
+.rtw { overflow-x: auto; border-radius: var(--r-sm); border: 1px solid var(--border); background: #ffffff; margin-bottom: 20px; }
+.rt { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rt th { padding: 11px 14px; background: #f8fafc; font-weight: 600; color: var(--text2); text-align: left; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; }
+.rt td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+.rt tr:last-child td { border-bottom: none; }
+.rt tr:hover td { background: #f8fafc; }
+.prog-wrap { height: 6px; background: var(--card2); border-radius: 3px; margin-top: 16px; overflow: hidden; display: none; }
+.prog-bar { height: 100%; background: var(--blue-g); border-radius: 3px; transition: width 0.4s ease; }
+
+/* STATS MATRIX / PROGRESS ROW */
+.matrix-row { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: #ffffff; border: 1px solid var(--border); border-radius: var(--r-sm); margin-bottom: 10px; box-shadow: var(--shadow); }
+.matrix-badge-wrap { display: flex; gap: 4px; min-width: 200px; flex-wrap: wrap; }
+.mbadge { font-size: 12px; padding: 4px 12px; border-radius: 6px; font-weight: 700; border: 1px solid var(--border2); background: #f1f5f9; color: var(--text2); display: inline-flex; align-items: center; gap: 4px; }
+.mbadge.b-1 { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.mbadge.b-2 { background: #e6fffa; color: #0d9488; border-color: #b2f5ea; }
+.mbadge.b-3 { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
+.mbadge.b-4 { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+.matrix-bar-container { flex: 1; height: 14px; background: #f1f5f9; border-radius: 20px; overflow: hidden; position: relative; border: 1px solid var(--border); }
+.matrix-bar-fill { height: 100%; background: var(--blue-g); border-radius: 20px; width: 0%; transition: width 0.4s ease; }
+.matrix-count { font-size: 14px; font-weight: 800; min-width: 90px; text-align: right; color: var(--text-header); }
+
+/* HISTORY ROW */
+.hrow { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #ffffff; border-radius: var(--r-sm); border: 1px solid var(--border); margin-bottom: 8px; box-shadow: var(--shadow); }
+.hrow:hover { background: #f8fafc; }
+.hmonth { font-size: 13px; font-weight: 700; color: var(--blue); min-width: 72px; }
+.hstat { font-size: 13px; color: var(--text2); }
+.hstat b { color: var(--text); }
+
+/* MODALS */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.modal-hd { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border-radius: var(--r) var(--r) 0 0; }
+.modal-hd-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.modal-hd-title i { color: var(--blue); }
+.modal-bd { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+.modal-ft { padding: 13px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; background: #f8fafc; border-radius: 0 0 var(--r) var(--r); }
+.fg { display: flex; flex-direction: column; gap: 6px; }
+.fl { font-size: 12px; font-weight: 600; color: var(--text2); }
+.txt-input, .txt-area { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border2); border-radius: var(--r-sm); background: var(--card); color: var(--text); outline: none; font-family: inherit; }
+.txt-input:focus, .txt-area:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.txt-area { resize: vertical; min-height: 70px; }
+.dept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+.dept-box { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: var(--r-sm); display: flex; flex-direction: column; gap: 4px; }
+.dept-box .dlbl { font-size: 11px; font-weight: 600; color: var(--text-soft); }
+.dept-box .dcnt { font-size: 18px; font-weight: 700; color: var(--text); }
+.dept-box .dcnt span { font-size: 12px; font-weight: 500; color: var(--text3); margin-left: 2px; }
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: #1e293b; color: #fff; padding: 10px 16px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 8px; animation: slideIn 0.25s ease forwards; }
+@keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ══════════ 수금 등급 배지 ══════════ */
+.pgrade { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 3px; }
+.pgA { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.pgB { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.pgC { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.pgD { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+.pgN { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+/* 수금율 프로그레스바 */
+.pay-bar-wrap { width: 100%; height: 5px; background: var(--card2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.pay-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.pay-bar-green { background: linear-gradient(90deg, #34d399, #10b981); }
+.pay-bar-blue  { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+.pay-bar-amber { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+.pay-bar-red   { background: linear-gradient(90deg, #f87171, #ef4444); }
+.pay-bar-gray  { background: #cbd5e1; }
+
+/* ══════════ 설정 페이지 ══════════ */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media(max-width:900px){ .settings-grid { grid-template-columns: 1fr; } }
+.settings-card { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); padding: 22px 24px; box-shadow: var(--shadow); }
+.settings-card h3 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.settings-card h3 i { color: var(--blue); font-size: 17px; }
+.settings-card p { font-size: 12px; color: var(--text2); margin-bottom: 18px; line-height: 1.6; }
+.grade-config-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: var(--r-sm); border: 1px solid var(--border); margin-bottom: 8px; background: var(--bg); }
+.grade-config-lbl { font-size: 13px; font-weight: 600; min-width: 80px; }
+.grade-config-desc { font-size: 11px; color: var(--text2); flex: 1; }
+.grade-days-input { width: 70px; padding: 6px 10px; font-size: 13px; border: 1px solid var(--border2); border-radius: var(--r-sm); background: #fff; color: var(--text); outline: none; font-family: inherit; text-align: center; }
+.grade-days-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.grade-days-unit { font-size: 12px; color: var(--text2); }
+.add-client-form { display: flex; flex-direction: column; gap: 12px; }
+.add-client-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.add-client-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+</style>
+</head>
+<body>
+
+<div class="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-mark"><i class="ti ti-layers-intersect"></i></div>
+    <div class="sb-logo-text">잘하시공 거래처 관리 Test<small>3S COMPANY</small></div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-av">관리</div>
+    <div>
+      <div class="sb-uname">데이터관리팀</div>
+      <div class="sb-urole">팀 이름 추천받습니다</div>
+    </div>
+    <div class="sb-badge"></div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">MENU</div>
+    <div class="sb-item active" onclick="switchPage('clients', this)"><i class="ti ti-address-book"></i>거래처 카드 종합 관리</div>
+    <div class="sb-item" onclick="switchPage('statistics', this)"><i class="ti ti-chart-pie"></i>서비스 조합 통계</div>
+    <div class="sb-item" onclick="switchPage('upload', this)"><i class="ti ti-file-upload"></i>엑셀 파일 업로드</div>
+    <div class="sb-item" onclick="switchPage('settings', this)"><i class="ti ti-settings"></i>설정</div>
+  </div>
+  <div class="sb-bottom">
+    <!-- 동기화 상태 표시 -->
+    <div id="sync-status" style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;background:rgba(0,0,0,0.03);margin-bottom:4px;">
+      <i class="ti ti-cloud" style="color:var(--text3);font-size:14px;"></i>
+      <span style="font-size:11px;color:var(--text3);">연결 중...</span>
+    </div>
+    <div class="sb-action" onclick="manualSync()"><i class="ti ti-refresh"></i>지금 동기화</div>
+    <div class="sb-action" onclick="exportExcel()"><i class="ti ti-download"></i>엑셀 파일 내보내기</div>
+    <div class="sb-action" onclick="backupData()"><i class="ti ti-cloud-computing"></i>전체 데이터 백업</div>
+    <div class="sb-action" onclick="document.getElementById('restorer').click()"><i class="ti ti-restore"></i>데이터 복원</div>
+    <input type="file" id="restorer" style="display:none" onchange="restoreData(this)" accept=".json">
+  </div>
+</div>
+
+<!-- 로딩 오버레이 -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(248,250,252,0.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#60a5fa,#2563eb);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;animation:pulse 1.5s infinite;">
+    <i class="ti ti-layers-intersect"></i>
+  </div>
+  <div style="font-size:15px;font-weight:600;color:var(--text);">데이터를 불러오는 중...</div>
+  <div style="font-size:12px;color:var(--text2);">Supabase 클라우드에서 동기화 중입니다.</div>
+  <style>@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.6;}}</style>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <span class="topbar-title"></span>
+      <span class="tb-sep"></span>
+      <span class="tb-cur" id="tb-current-text">거래처 카드 종합 관리</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="switchPage('upload')"><i class="ti ti-plus"></i>신규 엑셀 반입</button>
+    </div>
+  </div>
+
+  <div id="page-clients" class="page active">
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon si-blue"><i class="ti ti-users"></i></div>
+          <span class="stat-pill">실시간</span>
+        </div>
+        <div class="stat-val" id="d-total-clients">0</div>
+        <div class="stat-label">등록 담당자 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon si-amber"><i class="ti ti-trending-up"></i></div>
+          <span class="stat-pill">중복제거 고유치</span>
+        </div>
+        <div class="stat-val" id="d-total-sales">0</div>
+        <div class="stat-label">총 순수 현장 접수건</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon si-teal"><i class="ti ti-apps"></i></div>
+          <span class="stat-pill">분류군</span>
+        </div>
+        <div class="stat-val">4대 부서</div>
+        <div class="stat-label">철거 · 바닥 · 수거 · 동보행</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon si-green"><i class="ti ti-calendar-time"></i></div>
+          <span class="stat-pill">최신 업데이트</span>
+        </div>
+        <div class="stat-val" id="d-last-date">-</div>
+        <div class="stat-label">최근 데이터 진입월</div>
+      </div>
+    </div>
+
+    <div class="section-hd">
+      <h2><i class="ti ti-history"></i>월별 데이터 추이 데이터 (순수 현장수 기준)</h2>
+    </div>
+    <div id="dashboard-history" class="sc" style="min-height: 40px; display:flex; flex-direction:column; gap:4px; background:transparent; padding:0; border:none; box-shadow:none; margin-bottom:24px;"></div>
+
+    <div class="section-hd">
+      <h2><i class="ti ti-address-book"></i>거래처 담당자 카드</h2>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" class="search-input" id="search-keyword" oninput="renderClients()" placeholder="업체명 또는 담당자명을 입력하세요...">
+      </div>
+      <select class="fsel" id="filter-group" onchange="renderClients()">
+        <option value="">전체 등급 필터</option>
+        <option value="S">S등급 고정 거래처</option>
+        <option value="A">A등급 우수 거래처</option>
+        <option value="B">B등급 일반 거래처</option>
+        <option value="C">C등급 신규/정지</option>
+      </select>
+      <select class="fsel" id="sort-order" onchange="renderClients()">
+        <option value="count-desc">현장접수 많은순</option>
+        <option value="name-asc">업체명 가나다순</option>
+        <option value="date-desc">최근 거래일순</option>
+        <option value="payrate-asc">수금율 낮은순</option>
+        <option value="payrate-desc">수금율 높은순</option>
+      </select>
+      <div class="count-lbl" id="client-count-view">검색 결과: 0개 카드</div>
+    </div>
+
+    <div class="cards-grid" id="clients-container"></div>
+  </div>
+
+  <div id="page-statistics" class="page">
+    <div class="sc">
+      <div class="sc-title"><i class="ti ti-chart-pie-2"></i>월별 서비스 복합 이용 개수 및 상세 조합 집계</div>
+      <div class="sc-desc">선택한 월을 기준으로 각 거래처가 몇 개의 서비스를 이용했는지 요약하고, 15가지 상세 조합별 순위를 동시 추적합니다.</div>
+      
+      <div class="filter-bar" style="margin-bottom: 0;">
+        <label class="fl" style="margin-right:8px; display:flex; align-items:center; gap:4px;"><i class="ti ti-calendar"></i> 분석 조회 월 선택:</label>
+        <select class="fsel" id="stats-month-select" onchange="calculateCrossServiceStats()" style="min-width:160px;"></select>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card" style="grid-column: span 2;">
+        <div class="stat-top">
+          <div class="stat-icon si-purple"><i class="ti ti-crown"></i></div>
+          <span class="stat-pill" style="background:#f5f3ff; color:#6b21a8;">최다 이용 형태</span>
+        </div>
+        <div class="stat-val" id="st-top-combo" style="font-size:20px; padding-top:6px; color:var(--purple);">-</div>
+        <div class="stat-label">선택월 기준</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon si-teal"><i class="ti ti-package"></i></div>
+          <span class="stat-pill">복합 이용률</span>
+        </div>
+        <div class="stat-val" id="st-multi-ratio">0%</div>
+        <div class="stat-label">2개 부서 이상 복합 발주 거래처 비율</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon si-blue"><i class="ti ti-building-store"></i></div>
+          <span class="stat-pill">활성 풀</span>
+        </div>
+        <div class="stat-val" id="st-active-companies">0개사</div>
+        <div class="stat-label">당월 실적 유입 총 거래처 수</div>
+      </div>
+    </div>
+
+    <div class="section-hd">
+      <h2><i class="ti ti-align-left-2"></i>1. 이용 부서 개수별 단순 집계 (1개 부서 단독 ~ 4개 부서 복합 이용)</h2>
+    </div>
+    <div class="sc" style="padding: 20px 24px; margin-bottom:24px;">
+      <div id="stats-combination-matrix-container"></div>
+    </div>
+
+    <div class="section-hd">
+      <h2><i class="ti ti-list-numbered"></i>2. 선택월 15가지 상세 서비스 조합별 실시간 순위</h2>
+    </div>
+    <div class="rtw">
+      <table class="rt">
+        <thead>
+          <tr>
+            <th style="width: 70px; text-align: center;">순위</th>
+            <th>서비스 구성 조합</th>
+            <th style="width: 150px; text-align: right; padding-right: 24px;">이용 업체 수</th>
+          </tr>
+        </thead>
+        <tbody id="stats-detail-combination-tbody">
+          <tr><td colspan="3" style="text-align:center; color:var(--text3); padding:30px 0;">분석을 시작하려면 상단에서 월을 선택하세요.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-hd" style="margin-top:24px;">
+      <h2><i class="ti ti-arrows-diff"></i>3. 월별 비교 분석</h2>
+    </div>
+    <div class="sc" style="margin-bottom:24px;">
+      <div class="filter-bar" style="margin-bottom: 16px;">
+        <label class="fl" style="margin-right:8px; display:flex; align-items:center; gap:4px;"><i class="ti ti-calendar-stats"></i> 기준월:</label>
+        <select class="fsel" id="compare-base-month" onchange="calculateMonthComparison()" style="min-width:150px;"></select>
+        <label class="fl" style="margin-right:8px; display:flex; align-items:center; gap:4px;"><i class="ti ti-calendar"></i> 비교월:</label>
+        <select class="fsel" id="compare-target-month" onchange="calculateMonthComparison()" style="min-width:150px;"></select>
+      </div>
+      <div class="rtw">
+        <table class="rt">
+          <thead>
+            <tr>
+              <th>비교 항목</th>
+              <th style="width: 150px; text-align: right; padding-right: 24px;">기준월</th>
+              <th style="width: 150px; text-align: right; padding-right: 24px;">비교월</th>
+              <th style="width: 150px; text-align: right; padding-right: 24px;">증감</th>
+            </tr>
+          </thead>
+          <tbody id="month-comparison-tbody">
+            <tr><td colspan="4" style="text-align:center; color:var(--text3); padding:30px 0;">비교할 월을 선택하세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-upload" class="page">
+    <div class="sc">
+      <div class="sc-title"><i class="ti ti-cloud-upload"></i>엑셀 파일 업로드</div>
+      <div class="sc-desc">종합철거, 바닥철거, 수거, 동보행 엑셀 표준 포맷 데이터를 파싱합니다. (동일 부서 내 주소가 완전히 같으면 1건의 고유 현장 오더로 병합 처리됩니다.)</div>
+      
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('excel-file').click()">
+        <i class="ti ti-file-spreadsheet"></i>
+        <p>여기로 여러 개의 엑셀 파일을 동시에 드래그하거나 클릭하여 로드하세요.</p>
+        <small>지원 규격: 마이크로소프트 엑셀 (.xlsx, .xls, .csv) / 다중 선택 지원</small>
+      </div>
+      <input type="file" id="excel-file" style="display:none" onchange="handleFiles(this.files)" accept=".xlsx, .xls, .csv" multiple>
+      
+      <div class="prog-wrap" id="parse-progress-wrapper">
+        <div class="prog-bar" id="parse-progress-bar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <div class="section-hd" style="margin-top:24px;">
+      <h2><i class="ti ti-clipboard-list"></i>엑셀 파일 업로드 이력 관리</h2>
+      <button class="btn btn-danger" onclick="clearAllHistory()"><i class="ti ti-trash-x"></i>이력 전체 초기화</button>
+    </div>
+    <div class="rtw">
+      <table class="rt">
+        <thead>
+          <tr>
+            <th>업로드 일시</th>
+            <th>파일명</th>
+            <th>파일 크기</th>
+            <th>파싱 결과 및 수집 데이터 건수</th>
+            <th style="width:70px; text-align:center;">관리</th>
+          </tr>
+        </thead>
+        <tbody id="file-history-tbody">
+          <tr><td colspan="5" style="text-align:center; color:var(--text3); padding:30px 0;">반입된 파일 이력이 존재하지 않습니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-hd" style="margin-top:24px;">
+      <h2><i class="ti ti-list-check"></i>방금 유입된 로그 및 데이터 확인 (상위 15건 뷰어)</h2>
+    </div>
+    <div class="rtw">
+      <table class="rt">
+        <thead>
+          <tr>
+            <th>연도/월</th>
+            <th>인식 부서</th>
+            <th>업체명</th>
+            <th>담당자</th>
+            <th>연락처</th>
+            <th>현장 주소</th>
+            <th>최종 금액</th>
+          </tr>
+        </thead>
+        <tbody id="import-preview-tbody">
+          <tr><td colspan="7" style="text-align:center; color:var(--text3); padding:40px 0;">반입된 실시간 파일 로그가 없습니다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- end page-upload -->
+
+  <!-- ══════════ 설정 페이지 ══════════ -->
+  <div id="page-settings" class="page">
+    <div class="settings-grid">
+
+      <!-- ① 거래처 직접 등록 -->
+      <div class="settings-card">
+        <h3><i class="ti ti-user-plus"></i>거래처 직접 등록</h3>
+        <p>엑셀 업로드 없이 거래처 정보를 수동으로 등록합니다. 등록 후 거래처 카드에 즉시 반영됩니다.</p>
+        <div class="add-client-form">
+          <div class="fg">
+            <label class="fl">업체명 <span style="color:var(--red)">*</span></label>
+            <input type="text" class="txt-input" id="add-company" placeholder="예: 오르디자인">
+          </div>
+          <div class="add-client-row">
+            <div class="fg">
+              <label class="fl">담당자명</label>
+              <input type="text" class="txt-input" id="add-manager" placeholder="예: 이상현">
+            </div>
+            <div class="fg">
+              <label class="fl">연락처</label>
+              <input type="text" class="txt-input" id="add-phone" placeholder="예: 010-1234-5678">
+            </div>
+          </div>
+          <div class="add-client-row">
+            <div class="fg">
+              <label class="fl">거래 등급</label>
+              <select class="fsel" id="add-grade" style="width:100%">
+                <option value="S">S등급 고정 거래처</option>
+                <option value="A">A등급 우수 거래처</option>
+                <option value="B" selected>B등급 일반 거래처</option>
+                <option value="C">C등급 신규/정지</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">업체 특징</label>
+              <input type="text" class="txt-input" id="add-features" placeholder="예: 착함, 연락 잘됨">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">특이사항 메모</label>
+            <textarea class="txt-area" id="add-note" placeholder="거래처에 대한 특이사항을 자유롭게 입력하세요." style="min-height:60px;"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="addClientManually()" style="align-self:flex-end;">
+            <i class="ti ti-user-plus"></i>거래처 등록
+          </button>
+        </div>
+      </div>
+
+      <!-- ② 수금 등급 기간 설정 -->
+      <div class="settings-card">
+        <h3><i class="ti ti-shield-check"></i>수금 등급 기간 설정</h3>
+        <p>거래일(현장 진입일자) 기준으로 수금까지 걸린 기간에 따라 등급을 자동 부여합니다. 각 등급의 기준 일수를 직접 설정하고 저장하면 즉시 적용됩니다.</p>
+
+        <div class="grade-config-row" style="border-left:3px solid var(--green);">
+          <span class="grade-config-lbl">
+            <span class="pgrade pgA">A등급</span>
+          </span>
+          <span class="grade-config-desc">이 일수 이내에 수금 완료</span>
+          <input type="number" class="grade-days-input" id="grade-a-days" value="7" min="1" max="365">
+          <span class="grade-days-unit">일 이내</span>
+        </div>
+
+        <div class="grade-config-row" style="border-left:3px solid var(--blue);">
+          <span class="grade-config-lbl">
+            <span class="pgrade pgB">B등급</span>
+          </span>
+          <span class="grade-config-desc">A등급 초과 ~ 이 일수 이내 수금</span>
+          <input type="number" class="grade-days-input" id="grade-b-days" value="14" min="1" max="365">
+          <span class="grade-days-unit">일 이내</span>
+        </div>
+
+        <div class="grade-config-row" style="border-left:3px solid var(--amber);">
+          <span class="grade-config-lbl">
+            <span class="pgrade pgC">C등급</span>
+          </span>
+          <span class="grade-config-desc">B등급 초과 ~ 이 일수 이내 수금</span>
+          <input type="number" class="grade-days-input" id="grade-c-days" value="30" min="1" max="365">
+          <span class="grade-days-unit">일 이내</span>
+        </div>
+
+        <div class="grade-config-row" style="border-left:3px solid var(--red);">
+          <span class="grade-config-lbl">
+            <span class="pgrade pgD">D등급</span>
+          </span>
+          <span class="grade-config-desc">C등급 초과 또는 미수 상태</span>
+          <span class="grade-config-desc" style="font-size:12px; color:var(--text3); font-style:italic;">C등급 기준 초과 자동 적용</span>
+        </div>
+
+        <div style="margin-top:16px; padding:12px; background:var(--bg); border-radius:var(--r-sm); border:1px solid var(--border);">
+          <div style="font-size:11px; color:var(--text2); line-height:1.8;">
+            <b style="color:var(--text);">💡 기준 설명</b><br>
+            · <span class="pgrade pgA">A등급</span> : 거래일로부터 <b id="desc-a">7</b>일 이내 수금<br>
+            · <span class="pgrade pgB">B등급</span> : <b id="desc-a2">8</b>일 ~ <b id="desc-b">14</b>일 이내 수금<br>
+            · <span class="pgrade pgC">C등급</span> : <b id="desc-b2">15</b>일 ~ <b id="desc-c">30</b>일 이내 수금<br>
+            · <span class="pgrade pgD">D등급</span> : <b id="desc-c2">31</b>일 이상 또는 미수
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:14px; justify-content:flex-end;">
+          <button class="btn btn-ghost" onclick="resetGradeSettings()"><i class="ti ti-refresh"></i>기본값 복원</button>
+          <button class="btn btn-primary" onclick="saveGradeSettings()"><i class="ti ti-device-floppy"></i>설정 저장 및 적용</button>
+        </div>
+      </div>
+
+    </div><!-- end settings-grid -->
+
+    <!-- 수금 등급 현황 요약 -->
+    <div class="sc" style="margin-top:18px;">
+      <div class="sc-title"><i class="ti ti-chart-bar"></i>수금 등급 현황 요약</div>
+      <div class="sc-desc">현재 등록된 모든 거래처의 수금 등급 분포를 보여줍니다. (엑셀 업로드 데이터 기반)</div>
+      <div class="stat-row" id="pay-grade-summary">
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="color:var(--green)"><i class="ti ti-shield-check"></i></div><span class="stat-pill pgA" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;">A등급</span></div>
+          <div class="stat-val" id="pg-a-cnt" style="color:var(--green);">0</div>
+          <div class="stat-label">1주일 이내 수금</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="color:var(--blue)"><i class="ti ti-shield-half"></i></div><span class="stat-pill pgB" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">B등급</span></div>
+          <div class="stat-val" id="pg-b-cnt" style="color:var(--blue);">0</div>
+          <div class="stat-label">2주일 이내 수금</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="color:var(--amber)"><i class="ti ti-shield-pause"></i></div><span class="stat-pill pgC" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;">C등급</span></div>
+          <div class="stat-val" id="pg-c-cnt" style="color:var(--amber);">0</div>
+          <div class="stat-label">1개월 이내 수금</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon" style="color:var(--red)"><i class="ti ti-shield-x"></i></div><span class="stat-pill pgD" style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;">D등급</span></div>
+          <div class="stat-val" id="pg-d-cnt" style="color:var(--red);">0</div>
+          <div class="stat-label">1개월 초과 또는 미수</div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end page-settings -->
+
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title"><i class="ti ti-chart-bar"></i><span id="m-client-title">업체명</span> 상세 접수 현황</div>
+      <button class="ibt" onclick="closeDeptModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-bd">
+      <div class="fg">
+        <span class="fl">담당자 및 연락처 매핑 프로필</span>
+        <div style="background:var(--card2); padding:12px; border-radius:var(--r-sm); line-height:1.5;">
+          <div><b>담당자:</b> <span id="m-client-mgr">-</span></div>
+          <div><b>연락처:</b> <span id="m-client-phone">-</span></div>
+        </div>
+      </div>
+      <div class="fg">
+        <span class="fl">4대 핵심 부서별 고유 현장 스코어보드 (동일부서 내 중복 제거 완료)</span>
+        <div class="dept-grid">
+          <div class="dept-box" style="border-left: 3px solid var(--blue);">
+            <span class="dlbl">종합철거 부서</span>
+            <span class="dcnt" id="m-cnt-demol">0 <span>건</span></span>
+          </div>
+          <div class="dept-box" style="border-left: 3px solid var(--teal);">
+            <span class="dlbl">바닥철거 부서</span>
+            <span class="dcnt" id="m-cnt-floor">0 <span>건</span></span>
+          </div>
+          <div class="dept-box" style="border-left: 3px solid var(--purple);">
+            <span class="dlbl">수거 부서</span>
+            <span class="dcnt" id="m-cnt-pickup">0 <span>건</span></span>
+          </div>
+          <div class="dept-box" style="border-left: 3px solid var(--amber);">
+            <span class="dlbl">동보행 부서</span>
+            <span class="dcnt" id="m-cnt-walk">0 <span>건</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-primary" onclick="closeDeptModal()">확인 완료</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title"><i class="ti ti-edit"></i>거래처 상세 프로필 편집</div>
+      <button class="ibt" onclick="closeEditModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="edit-client-id">
+      <div class="fg">
+        <label class="fl">업체명</label>
+        <input type="text" class="txt-input" id="edit-company" readonly style="background:var(--bg); color:var(--text-soft);">
+      </div>
+      <div class="fg">
+        <label class="fl">담당자</label>
+        <input type="text" class="txt-input" id="edit-manager">
+      </div>
+      <div class="fg">
+        <label class="fl">연락처</label>
+        <input type="text" class="txt-input" id="edit-phone">
+      </div>
+      <div class="fg">
+        <label class="fl">거래 등급</label>
+        <select class="fsel" id="edit-grade" style="width:100%;">
+          <option value="S">S등급 고정 거래처</option>
+          <option value="A">A등급 우수 거래처</option>
+          <option value="B">B등급 일반 거래처</option>
+          <option value="C">C등급 신규/정지</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">업체 특징</label>
+        <input type="text" class="txt-input" id="edit-features" placeholder="예: 착함, 연락 안됨, 돈 잘 안줌 등">
+      </div>
+      <div class="fg">
+        <label class="fl">특이사항 (자유 메모)</label>
+        <textarea class="txt-area" id="edit-note" placeholder="해당 담당자에 대한 특이사항 등을 자유롭게 입력하세요."></textarea>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeEditModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveClientEdit()">변경사항 저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+let clients = [];
+let salesHistory = [];
+let fileHistory = [];
+
+const DEFAULT_GRADE_DAYS = { a: 7, b: 14, c: 30 };
+
+// ══════════ SUPABASE 설정 ══════════
+const SB_URL = 'https://qdovcerizahryctsrrbw.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkb3ZjZXJpemFocnljdHNycmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNjM5MDYsImV4cCI6MjA5NTkzOTkwNn0.U855kPZFDDfQe53zpZ5oRJxH_T2LRISAIDlBK2wuEYs';
+const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' };
+
+let syncTimer = null;
+let isSyncing = false;
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  const map = {
+    ok:      { icon: 'ti-cloud-check',    color: 'var(--green)', text: '동기화 완료' },
+    syncing: { icon: 'ti-cloud-upload',   color: 'var(--blue)',  text: '저장 중...' },
+    error:   { icon: 'ti-cloud-x',        color: 'var(--red)',   text: '동기화 실패' },
+    offline: { icon: 'ti-wifi-off',       color: 'var(--amber)', text: '오프라인' },
+  };
+  const s = map[status] || map.ok;
+  el.innerHTML = `<i class="ti ${s.icon}" style="color:${s.color};font-size:14px;"></i><span style="font-size:11px;color:${s.color};">${s.text}</span>`;
+}
+
+async function sbUpsert(table, rows) {
+  if(!rows || rows.length === 0) return true;
+  const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify(rows)
+  });
+  return res.ok;
+}
+
+async function sbFetchAll(table) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?select=*&limit=100000`, {
+    headers: SB_HEADERS
+  });
+  if(!res.ok) return null;
+  return res.json();
+}
+
+async function sbDelete(table, pkField, pkValue) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${pkField}=eq.${encodeURIComponent(pkValue)}`, {
+    method: 'DELETE',
+    headers: SB_HEADERS
+  });
+  return res.ok;
+}
+
+// 저장: localStorage 캐시 + Supabase 비동기 업로드
+function save() {
+  // 1. localStorage 즉시 저장 (오프라인 대비)
+  localStorage.setItem('3s_clients_v3', JSON.stringify(clients));
+  localStorage.setItem('3s_sales_v3', JSON.stringify(salesHistory));
+  localStorage.setItem('3s_files_v3', JSON.stringify(fileHistory));
+
+  // 2. Supabase debounce 업로드 (500ms)
+  clearTimeout(syncTimer);
+  setSyncStatus('syncing');
+  syncTimer = setTimeout(async () => {
+    if(isSyncing) return;
+    isSyncing = true;
+    try {
+      const clientRows = clients.map(c => ({ id: c.id, data: c, updated_at: new Date().toISOString() }));
+      const salesRows  = salesHistory.map(s => ({ order_key: s.orderKey || s.order_key, data: s, updated_at: new Date().toISOString() }));
+      const fileRows   = fileHistory.map(f => ({ id: f.id, data: f, updated_at: new Date().toISOString() }));
+
+      const r1 = clientRows.length ? await sbUpsert('erp_clients', clientRows) : true;
+      const r2 = salesRows.length  ? await sbUpsert('erp_sales',   salesRows)  : true;
+      const r3 = fileRows.length   ? await sbUpsert('erp_files',   fileRows)   : true;
+
+      setSyncStatus(r1 && r2 && r3 ? 'ok' : 'error');
+    } catch(e) {
+      setSyncStatus('error');
+    } finally {
+      isSyncing = false;
+    }
+  }, 500);
+}
+
+// 로드: Supabase 우선, 실패 시 localStorage 폴백
+async function load() {
+  setSyncStatus('syncing');
+  try {
+    const [cr, sr, fr, setR] = await Promise.all([
+      sbFetchAll('erp_clients'),
+      sbFetchAll('erp_sales'),
+      sbFetchAll('erp_files'),
+      sbFetchAll('erp_settings')
+    ]);
+
+    if(cr !== null) {
+      clients      = cr.map(r => r.data);
+      salesHistory = (sr || []).map(r => r.data);
+      fileHistory  = (fr || []).map(r => r.data);
+
+      // 수금 등급 설정도 Supabase에서
+      const gradeSetting = (setR || []).find(r => r.key === 'grade_days');
+      if(gradeSetting) {
+        localStorage.setItem('3s_grade_days', JSON.stringify(gradeSetting.value));
+      }
+
+      // localStorage도 갱신
+      localStorage.setItem('3s_clients_v3', JSON.stringify(clients));
+      localStorage.setItem('3s_sales_v3', JSON.stringify(salesHistory));
+      localStorage.setItem('3s_files_v3', JSON.stringify(fileHistory));
+
+      setSyncStatus('ok');
+    } else {
+      throw new Error('Supabase 연결 실패');
+    }
+  } catch(e) {
+    // 오프라인 폴백
+    setSyncStatus('offline');
+    const c = localStorage.getItem('3s_clients_v3');
+    const s = localStorage.getItem('3s_sales_v3');
+    const f = localStorage.getItem('3s_files_v3');
+    if(c) clients      = JSON.parse(c);
+    if(s) salesHistory = JSON.parse(s);
+    if(f) fileHistory  = JSON.parse(f);
+    showToast('⚠️ 오프라인 상태입니다. 로컬 데이터를 사용합니다.');
+  }
+}
+
+// 수금 등급 설정도 Supabase에 저장
+async function saveGradeDaysToCloud(days) {
+  try {
+    await sbUpsert('erp_settings', [{ key: 'grade_days', value: days, updated_at: new Date().toISOString() }]);
+  } catch(e) {}
+}
+
+// 삭제 시 Supabase에서도 제거
+async function sbRemoveClient(clientId) {
+  await sbDelete('erp_clients', 'id', clientId);
+  const relatedSales = salesHistory.filter(s => s.clientKey === clientId);
+  for(const s of relatedSales) {
+    await sbDelete('erp_sales', 'order_key', s.orderKey || s.order_key);
+  }
+}
+
+async function sbRemoveFile(fileId) {
+  await sbDelete('erp_files', 'id', fileId);
+  const relatedSales = salesHistory.filter(s => s.fileId === fileId);
+  for(const s of relatedSales) {
+    await sbDelete('erp_sales', 'order_key', s.orderKey || s.order_key);
+  }
+}
+
+// 실시간 자동 새로고침 (30초마다)
+setInterval(async () => {
+  if(isSyncing) return;
+  try {
+    const [cr, sr, fr] = await Promise.all([
+      sbFetchAll('erp_clients'),
+      sbFetchAll('erp_sales'),
+      sbFetchAll('erp_files')
+    ]);
+    if(cr !== null) {
+      const newClients = cr.map(r => r.data);
+      const newSales   = (sr||[]).map(r => r.data);
+      const newFiles   = (fr||[]).map(r => r.data);
+      // 변경 감지
+      if(JSON.stringify(newClients) !== JSON.stringify(clients) ||
+         JSON.stringify(newSales)   !== JSON.stringify(salesHistory)) {
+        clients      = newClients;
+        salesHistory = newSales;
+        fileHistory  = newFiles;
+        localStorage.setItem('3s_clients_v3', JSON.stringify(clients));
+        localStorage.setItem('3s_sales_v3', JSON.stringify(salesHistory));
+        localStorage.setItem('3s_files_v3', JSON.stringify(fileHistory));
+        migrateStoredData();
+        recalculateAllClientCounts();
+        refreshDashboard();
+        renderClients();
+        renderFileHistory();
+        showToast('🔄 다른 사용자의 변경사항이 반영됐습니다.');
+      }
+      setSyncStatus('ok');
+    }
+  } catch(e) { setSyncStatus('offline'); }
+}, 30000);
+
+window.addEventListener('DOMContentLoaded', async () => {
+  // 로딩 오버레이 표시
+  document.getElementById('loading-overlay').style.display = 'flex';
+  await load();
+  document.getElementById('loading-overlay').style.display = 'none';
+
+  migrateStoredData();
+  initDragAndDrop();
+  recalculateAllClientCounts();
+  refreshDashboard();
+  renderFileHistory();
+  renderClients();
+  if(!localStorage.getItem('3s_grade_days')) {
+    localStorage.setItem('3s_grade_days', JSON.stringify(DEFAULT_GRADE_DAYS));
+  }
+});
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<i class="ti ti-circle-check" style="color:var(--green)"></i><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2800);
+}
+
+function switchPage(pageId, element) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${pageId}`).classList.add('active');
+  
+  if(element) {
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    element.classList.add('active');
+  }
+  
+  const textMap = { 
+    'clients': '거래처 카드 종합 관리', 
+    'statistics': '서비스 조합 통계', 
+    'upload': '엑셀 파일 업로드',
+    'settings': '설정'
+  };
+  document.getElementById('tb-current-text').innerText = textMap[pageId] || '';
+  
+  if(pageId === 'clients') {
+    recalculateAllClientCounts();
+    refreshDashboard();
+    renderClients();
+  } else if(pageId === 'upload') {
+    renderFileHistory();
+  } else if(pageId === 'statistics') {
+    initStatsMonthFilter();
+  } else if(pageId === 'settings') {
+    loadGradeSettings();
+    updateGradeDescriptions();
+    refreshPayGradeSummary();
+  }
+}
+
+function initDragAndDrop() {
+  const dz = document.getElementById('drop-zone');
+  if(!dz) return;
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('drag');
+    if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+}
+
+function formatBytes(bytes, decimals = 1) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+function formatNow() {
+  const d = new Date();
+  return d.getFullYear() + '-' + 
+         String(d.getMonth()+1).padStart(2,'0') + '-' + 
+         String(d.getDate()).padStart(2,'0') + ' ' + 
+         String(d.getHours()).padStart(2,'0') + ':' + 
+         String(d.getMinutes()).padStart(2,'0') + ':' + 
+         String(d.getSeconds()).padStart(2,'0');
+}
+
+function normalizeText(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeAddress(value) {
+  return normalizeText(value).replace(/[()\[\]{}.,]/g, "").replace(/\s+/g, "");
+}
+
+function normalizePhone(value) {
+  return String(value || "").replace(/[^0-9]/g, "");
+}
+
+function buildFileSignature(file) {
+  return `${file.name}_${file.size}_${file.lastModified || 0}`;
+}
+
+function buildOrderKey(order) {
+  return [
+    order.month || "",
+    order.dept || "",
+    normalizeText(order.company),
+    normalizeText(order.manager),
+    normalizePhone(order.phone),
+    normalizeAddress(order.address)
+  ].join("|");
+}
+
+function isSameClientSale(clientObj, saleObj) {
+  if(saleObj.clientKey === clientObj.id) return true;
+
+  return normalizeText(saleObj.company) === normalizeText(clientObj.company) &&
+         normalizeText(saleObj.manager) === normalizeText(clientObj.manager) &&
+         normalizePhone(saleObj.phone) === normalizePhone(clientObj.phone);
+}
+
+function getClientSales(clientObj) {
+  return salesHistory.filter(s => isSameClientSale(clientObj, s));
+}
+
+function parseMonthValue(value) {
+  if(value instanceof Date && !isNaN(value)) {
+    return value.getFullYear() + '-' + String(value.getMonth() + 1).padStart(2, '0');
+  }
+
+  if(typeof value === "number" && value > 30000) {
+    const parsedDate = XLSX.SSF.parse_date_code(value);
+    if(parsedDate) return `${parsedDate.y}-${String(parsedDate.m).padStart(2, '0')}`;
+  }
+
+  const dateStr = String(value || "").trim();
+  const match = dateStr.match(/(20\d{2})[-.\/년\s]*([01]?\d)/);
+  if(match) return `${match[1]}-${String(match[2]).padStart(2, '0')}`;
+
+  return "";
+}
+
+function parseDateValue(value) {
+  if(value instanceof Date && !isNaN(value)) {
+    return value.getFullYear() + '-' + 
+           String(value.getMonth() + 1).padStart(2, '0') + '-' + 
+           String(value.getDate()).padStart(2, '0');
+  }
+
+  if(typeof value === "number" && value > 30000) {
+    const parsedDate = XLSX.SSF.parse_date_code(value);
+    if(parsedDate) {
+      return `${parsedDate.y}-${String(parsedDate.m).padStart(2, '0')}-${String(parsedDate.d).padStart(2, '0')}`;
+    }
+  }
+
+  const dateStr = String(value || "").trim();
+  let match = dateStr.match(/(20\d{2})[-.\/년\s]*([01]?\d)[-.\/월\s]*([0-3]?\d)/);
+  if(match) {
+    return `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+  }
+
+  match = dateStr.match(/([01]?\d)[-.\/월\s]+([0-3]?\d)[-.\/일\s]+(\d{2})/);
+  if(match) {
+    return `20${match[3]}-${String(match[1]).padStart(2, '0')}-${String(match[2]).padStart(2, '0')}`;
+  }
+
+  return "";
+}
+
+function getLatestDateFromSales(salesList) {
+  const dates = salesList
+    .map(s => parseDateValue(s.date) || parseDateValue(s.rawDate) || s.date || s.month)
+    .filter(d => d && d !== "기록없음");
+
+  return dates.length > 0 ? dates.reduce((a, b) => a > b ? a : b) : "기록없음";
+}
+
+function migrateStoredData() {
+  salesHistory.forEach(s => {
+    if(!s.orderKey) s.orderKey = buildOrderKey(s);
+    if(!s.date) s.date = parseDateValue(s.rawDate) || s.month || "";
+  });
+}
+
+function recalculateAllClientCounts() {
+  clients.forEach(c => {
+    const subSales = getClientSales(c);
+    const uniqueSites = [];
+    const checkSet = new Set();
+    
+    subSales.forEach(s => {
+      const uniqueKey = `${s.month}_${s.dept}_${s.address}`;
+      if(!checkSet.has(uniqueKey)) {
+        checkSet.add(uniqueKey);
+        uniqueSites.push(s);
+      }
+    });
+
+    c.salesCount = uniqueSites.length;
+    
+    const activeDepts = [];
+    uniqueSites.forEach(s => {
+      if(!activeDepts.includes(s.dept)) activeDepts.push(s.dept);
+    });
+    c.depts = activeDepts;
+
+    if(uniqueSites.length > 0) {
+      c.lastDate = getLatestDateFromSales(uniqueSites);
+    } else {
+      c.lastDate = "기록없음";
+    }
+  });
+
+  clients = clients.filter(c => c.salesCount >= 0);
+}
+
+function handleFiles(files) {
+  if(!files || files.length === 0) return;
+
+  const wrapper = document.getElementById('parse-progress-wrapper');
+  const bar = document.getElementById('parse-progress-bar');
+  wrapper.style.display = 'block';
+  bar.style.width = '10%';
+
+  let fileArray = Array.from(files);
+  let filesProcessed = 0;
+  let totalParsedCount = 0;
+  let skippedDuplicateRows = 0;
+  let updatedDateRows = 0;
+  let previewRows = [];
+  const knownOrderKeys = new Set(salesHistory.map(s => s.orderKey || buildOrderKey(s)));
+
+  function processNextFile(fileIndex) {
+    if(fileIndex >= fileArray.length) {
+      if(previewRows.length > 0) {
+        document.getElementById('import-preview-tbody').innerHTML = previewRows.join('');
+      }
+      recalculateAllClientCounts();
+      bar.style.width = '100%';
+      setTimeout(() => {
+        wrapper.style.display = 'none';
+        const skipMsg = skippedDuplicateRows ? ` 중복 현장 ${skippedDuplicateRows}건은 제외했습니다.` : '';
+        const updateMsg = updatedDateRows ? ` 기존 현장 ${updatedDateRows}건의 최근거래일을 보정했습니다.` : '';
+        showToast(`총 ${fileArray.length}개의 파일 분할 데이터 로드 및 고유 현장 정산 매핑을 완료했습니다.${skipMsg}${updateMsg}`);
+        save();
+        refreshDashboard();
+        renderFileHistory();
+        renderClients();
+      }, 500);
+      return;
+    }
+
+    const file = fileArray[fileIndex];
+    const currentFileSignature = buildFileSignature(file);
+    const reader = new FileReader();
+    const currentFileId = 'file_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+    let fileParsedRowsCount = 0;
+
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        workbook.SheetNames.forEach(sheetName => {
+          const scanTarget = (file.name + "_" + sheetName).replace(/\s/g, "");
+          let detectedDept = "기타부서";
+          if(scanTarget.includes("종합철거")) detectedDept = "종합철거";
+          else if(scanTarget.includes("바닥철거")) detectedDept = "바닥철거";
+          else if(scanTarget.includes("수거")) detectedDept = "수거";
+          else if(scanTarget.includes("동보행")) detectedDept = "동보행";
+
+          const worksheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          if(json.length < 2) return;
+
+          let headerRow = json[0];
+          if (json[0][0] === "번호" && json[1] && json[1].includes("최종")) {
+            headerRow = json[0].map((h, idx) => h || json[1][idx] || "");
+          }
+          
+          const idxMap = {
+            clientName: headerRow.findIndex(c => String(c).includes("업체명")),
+            manager: headerRow.findIndex(c => String(c).includes("담당자")),
+            phone: headerRow.findIndex(c => String(c).includes("연락처")),
+            date: headerRow.findIndex(c => String(c).includes("진입일자") || String(c).includes("시작일") || String(c).includes("날짜") || String(c).includes("일자")),
+            price: headerRow.findIndex(c => String(c).includes("최종") || String(c).includes("합계") || String(c).includes("매출금액")),
+            address: headerRow.findIndex(c => String(c).includes("주소")),
+            payDate: headerRow.findIndex(c => String(c).includes("입금일")),
+            payAmount: headerRow.findIndex(c => String(c).includes("입금액")),
+            unpaid: headerRow.findIndex(c => String(c).includes("미수금"))
+          };
+
+          for(let i = 1; i < json.length; i++) {
+            const row = json[i];
+            if(!row || row.length === 0 || !row[idxMap.clientName]) continue;
+            if(String(row[idxMap.clientName]).includes("업체명") || String(row[idxMap.clientName]).includes("매출")) continue;
+
+            const rawCompany = String(row[idxMap.clientName] || "").trim();
+            const rawMgr = String(row[idxMap.manager] || "담당자미지정").trim();
+            const rawPhone = String(row[idxMap.phone] || "010-0000-0000").trim().replace(/[^0-9-]/g, "");
+            const rawDate = String(row[idxMap.date] || "").trim();
+            const rawPrice = parseInt(String(row[idxMap.price] || "0").replace(/[^0-9]/g, "")) || 0;
+            const rawAddr = String(row[idxMap.address] || "현장주소미기재").trim();
+
+            // 수금 정보 파싱
+            const rawPayDate = idxMap.payDate >= 0 ? row[idxMap.payDate] : null;
+            const rawPayAmount = idxMap.payAmount >= 0 ? parseInt(String(row[idxMap.payAmount] || "0").replace(/[^0-9]/g, "")) || 0 : 0;
+            const rawUnpaid = idxMap.unpaid >= 0 ? parseInt(String(row[idxMap.unpaid] || "").replace(/[^0-9-]/g, "")) : null;
+            const parsedPayDate = rawPayDate ? parseDateValue(rawPayDate) : "";
+            // 미수 여부: 미수금액이 양수이거나, 입금일이 없고 입금액도 0이면 미수
+            const isUnpaid = (rawUnpaid !== null && rawUnpaid > 0) || (!parsedPayDate && rawPayAmount === 0);
+
+            if(!rawCompany || rawCompany === "undefined") continue;
+
+            const parsedDate = parseDateValue(row[idxMap.date]);
+            const parsedMonth = parseMonthValue(row[idxMap.date]) || (parsedDate ? parsedDate.substring(0, 7) : "2026-05");
+
+            const clientUniqueKey = `${rawCompany}_${rawMgr}_${rawPhone}`;
+            const orderKey = buildOrderKey({
+              month: parsedMonth,
+              dept: detectedDept,
+              company: rawCompany,
+              manager: rawMgr,
+              phone: rawPhone,
+              address: rawAddr
+            });
+
+            if(knownOrderKeys.has(orderKey)) {
+              const existingOrder = salesHistory.find(s => (s.orderKey || buildOrderKey(s)) === orderKey);
+              if(existingOrder && parsedDate && (!existingOrder.date || existingOrder.date.length < 10)) {
+                existingOrder.date = parsedDate;
+                updatedDateRows++;
+              }
+              skippedDuplicateRows++;
+              continue;
+            }
+            knownOrderKeys.add(orderKey);
+
+            salesHistory.push({
+              fileId: currentFileId,
+              orderKey,
+              clientKey: clientUniqueKey,
+              company: rawCompany,
+              manager: rawMgr,
+              phone: rawPhone,
+              rawDate,
+              date: parsedDate || parsedMonth,
+              month: parsedMonth,
+              dept: detectedDept,
+              price: rawPrice,
+              address: rawAddr,
+              payDate: parsedPayDate,
+              payAmount: rawPayAmount,
+              isUnpaid: isUnpaid
+            });
+
+            let clientObj = clients.find(c => c.id === clientUniqueKey);
+            if(!clientObj) {
+              clients.push({
+                id: clientUniqueKey,
+                company: rawCompany,
+                manager: rawMgr,
+                phone: rawPhone,
+                grade: "B", 
+                lastDate: parsedDate || parsedMonth,
+                features: "",
+                depts: [detectedDept],
+                salesCount: 1,
+                note: ""
+              });
+            }
+
+            if(totalParsedCount < 15) {
+              previewRows.push(`
+                <tr>
+                  <td><span class="chip">${parsedMonth}</span></td>
+                  <td><span class="chip" style="background:#eff6ff; border-color:#bfdbfe; color:#2563eb">${detectedDept}</span></td>
+                  <td><b>${rawCompany}</b></td>
+                  <td>${rawMgr}</td>
+                  <td>${rawPhone}</td>
+                  <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${rawAddr}</td>
+                  <td><b style="color:var(--text)">${rawPrice.toLocaleString()}원</b></td>
+                </tr>
+              `);
+            }
+            totalParsedCount++;
+            fileParsedRowsCount++;
+          }
+        });
+
+        if (fileParsedRowsCount > 0) {
+          fileHistory.unshift({
+            id: currentFileId,
+            fileSignature: currentFileSignature,
+            uploadTime: formatNow(),
+            fileName: file.name,
+            fileSize: formatBytes(file.size),
+            parsedCount: fileParsedRowsCount
+          });
+        }
+
+        filesProcessed++;
+        bar.style.width = `${10 + Math.floor((filesProcessed / fileArray.length) * 80)}%`;
+        processNextFile(fileIndex + 1);
+
+      } catch (err) {
+        console.error(err);
+        alert(`[${file.name}] 파일 분석 오류.`);
+        processNextFile(fileIndex + 1);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  processNextFile(0);
+}
+
+function renderFileHistory() {
+  const tbody = document.getElementById('file-history-tbody');
+  if(!tbody) return;
+  if (fileHistory.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text3); padding:30px 0;">반입된 파일 이력이 존재하지 않습니다.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = fileHistory.map(f => `
+    <tr>
+      <td>${f.uploadTime}</td>
+      <td><i class="ti ti-file-spreadsheet" style="color:var(--teal); margin-right:4px;"></i><b>${f.fileName}</b></td>
+      <td>${f.fileSize}</td>
+      <td><span class="chip" style="background:#ecfdf5; border-color:#a7f3d0; color:#059669">성공 / 오더 ${f.parsedCount}라인 수집됨</span></td>
+      <td style="text-align:center;">
+        <button class="ibt del" onclick="deleteHistoryFile('${f.id}')"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function deleteHistoryFile(targetFileId) {
+  const fileInfo = fileHistory.find(f => f.id === targetFileId);
+  if(!confirm(`선택한 파일의 데이터(${fileInfo?.parsedCount || 0}건)를 연쇄 파기하시겠습니까?`)) return;
+
+  salesHistory = salesHistory.filter(s => s.fileId !== targetFileId);
+  fileHistory = fileHistory.filter(f => f.id !== targetFileId);
+  sbRemoveFile(targetFileId);
+  recalculateAllClientCounts();
+
+  save(); refreshDashboard(); renderFileHistory(); renderClients();
+  showToast('데이터 제거 및 고유 카운트 역산 재반영 완료.');
+}
+
+async function manualSync() {
+  setSyncStatus('syncing');
+  showToast('클라우드에서 최신 데이터를 가져오는 중...');
+  try {
+    const [cr, sr, fr] = await Promise.all([
+      sbFetchAll('erp_clients'),
+      sbFetchAll('erp_sales'),
+      sbFetchAll('erp_files')
+    ]);
+    if(cr !== null) {
+      clients      = cr.map(r => r.data);
+      salesHistory = (sr||[]).map(r => r.data);
+      fileHistory  = (fr||[]).map(r => r.data);
+      localStorage.setItem('3s_clients_v3', JSON.stringify(clients));
+      localStorage.setItem('3s_sales_v3', JSON.stringify(salesHistory));
+      localStorage.setItem('3s_files_v3', JSON.stringify(fileHistory));
+      migrateStoredData();
+      recalculateAllClientCounts();
+      refreshDashboard(); renderFileHistory(); renderClients();
+      setSyncStatus('ok');
+      showToast('✅ 동기화 완료! 최신 데이터로 업데이트됐습니다.');
+    } else { throw new Error(); }
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('❌ 동기화 실패. 네트워크를 확인하세요.');
+  }
+}
+
+function clearAllHistory() {
+  if(!confirm('모든 데이터(거래처 카드, 매출 이력, 파일 업로드 이력)를 전면 초기화하시겠습니까?\n\n⚠️ 클라우드 데이터도 함께 삭제됩니다.')) return;
+  
+  clients = []; 
+  salesHistory = []; 
+  fileHistory = [];
+  
+  // Supabase 전체 삭제
+  (async () => {
+    try {
+      await Promise.all([
+        fetch(`${SB_URL}/rest/v1/erp_clients`, { method: 'DELETE', headers: { ...SB_HEADERS, 'Prefer': '' } }),
+        fetch(`${SB_URL}/rest/v1/erp_sales`,   { method: 'DELETE', headers: { ...SB_HEADERS, 'Prefer': '' } }),
+        fetch(`${SB_URL}/rest/v1/erp_files`,   { method: 'DELETE', headers: { ...SB_HEADERS, 'Prefer': '' } }),
+      ]);
+    } catch(e) {}
+  })();
+
+  save(); 
+  refreshDashboard(); 
+  renderFileHistory();
+  renderClients();
+  document.getElementById('import-preview-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text3); padding:40px 0;">반입된 실시간 파일 로그가 없습니다.</td></tr>`;
+  showToast('모든 데이터와 파일 이력이 초기화되었습니다.');
+}
+
+function refreshDashboard() {
+  const dTotalClients = document.getElementById('d-total-clients');
+  const dTotalSales = document.getElementById('d-total-sales');
+  const dLastDate = document.getElementById('d-last-date');
+  if(!dTotalClients) return;
+
+  dTotalClients.innerText = clients.length;
+
+  let globalUniqueCount = 0;
+  clients.forEach(c => { globalUniqueCount += c.salesCount; });
+  dTotalSales.innerText = globalUniqueCount;
+
+  if(clients.length > 0) {
+    const dates = clients.map(c => c.lastDate).filter(d => d && d !== "기록없음");
+    if(dates.length > 0) {
+      dLastDate.innerText = dates.reduce((a, b) => a > b ? a : b).replace("-", "년 ") + "월";
+    } else { dLastDate.innerText = "-"; }
+  } else { dLastDate.innerText = "-"; }
+
+  const monthMap = {};
+  clients.forEach(c => {
+    const subSales = salesHistory.filter(s => s.clientKey === c.id);
+    const seen = new Set();
+    subSales.forEach(s => {
+      const uKey = `${s.month}_${s.dept}_${s.address}`;
+      if(!seen.has(uKey)) {
+        seen.add(uKey);
+        monthMap[s.month] = (monthMap[s.month] || 0) + 1;
+      }
+    });
+  });
+
+  const sortedMonths = Object.keys(monthMap).sort((a, b) => b.localeCompare(a));
+  const historyContainer = document.getElementById('dashboard-history');
+  
+  if(sortedMonths.length === 0) {
+    historyContainer.innerHTML = `<div class="sc" style="text-align:center; color:var(--text3); padding:20px; background:#fff; border:1px solid var(--border);">집계된 로그 내역이 없습니다.</div>`;
+  } else {
+    historyContainer.innerHTML = sortedMonths.map(m => `
+      <div class="hrow">
+        <div class="hmonth">${m.replace("-", "년 ")}월</div>
+        <div class="hstat">당월 기준 중복을 제외한 고유 현장 오더 실적은 총 <b>${monthMap[m]}</b>건 관측되었습니다.</div>
+      </div>
+    `).join('');
+  }
+}
+
+function initStatsMonthFilter() {
+  const select = document.getElementById('stats-month-select');
+  if(!select) return;
+
+  const months = [...new Set(salesHistory.map(s => s.month))].sort((a, b) => b.localeCompare(a));
+  
+  if(months.length === 0) {
+    select.innerHTML = `<option value="">데이터 없음</option>`;
+    initMonthComparisonFilter([]);
+    document.getElementById('stats-combination-matrix-container').innerHTML = 
+      `<div style="text-align:center; color:var(--text3); padding:40px 0;">분석을 시행할 실적 로그가 비어 있습니다.</div>`;
+    document.getElementById('stats-detail-combination-tbody').innerHTML = 
+      `<tr><td colspan="3" style="text-align:center; color:var(--text3); padding:30px 0;">실적 로그가 비어 있습니다.</td></tr>`;
+    return;
+  }
+
+  select.innerHTML = months.map(m => `<option value="${m}">${m.replace("-","년 ")}월</option>`).join('');
+  initMonthComparisonFilter(months);
+  calculateCrossServiceStats();
+}
+
+// ══════════ 📊 개수 집계 + 15가지 상세 조합 월별 동시 추적 모듈 (v2.1) ══════════
+function calculateCrossServiceStats() {
+  const targetMonth = document.getElementById('stats-month-select').value;
+  if(!targetMonth) return;
+
+  const monthlyOrders = salesHistory.filter(s => s.month === targetMonth);
+  const clientServiceMap = {};
+  const processedSites = new Set();
+
+  monthlyOrders.forEach(order => {
+    if(!["종합철거", "바닥철거", "수거", "동보행"].includes(order.dept)) return;
+    
+    const siteKey = `${order.clientKey}_${order.dept}_${order.address}`;
+    if(processedSites.has(siteKey)) return; 
+    processedSites.add(siteKey);
+
+    if(!clientServiceMap[order.clientKey]) {
+      clientServiceMap[order.clientKey] = new Set();
+    }
+    clientServiceMap[order.clientKey].add(order.dept);
+  });
+
+  const activeClientsCount = Object.keys(clientServiceMap).length;
+  document.getElementById('st-active-companies').innerText = `${activeClientsCount}개사`;
+
+  if(activeClientsCount === 0) {
+    document.getElementById('st-top-combo').innerText = "없음";
+    document.getElementById('st-multi-ratio').innerText = "0%";
+    document.getElementById('stats-combination-matrix-container').innerHTML = 
+      `<div style="text-align:center; color:var(--text3); padding:30px 0;">당월 접수 기록이 존재하지 않습니다.</div>`;
+    document.getElementById('stats-detail-combination-tbody').innerHTML = 
+      `<tr><td colspan="3" style="text-align:center; color:var(--text3); padding:30px 0;">당월 접수 기록이 존재하지 않습니다.</td></tr>`;
+    return;
+  }
+
+  // 모듈 1: 1개~4개 부서 이용자 수 카운팅
+  const countPool = [1, 2, 3, 4];
+  const countCounter = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  let multipleServiceUsers = 0;
+
+  // 모듈 2: 15가지 조합 상세 트랙킹 마스터 딕셔너리 정의
+  const comboDict = {
+    "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0,
+    "종합철거 + 바닥철거": 0, "종합철거 + 수거": 0, "종합철거 + 동보행": 0,
+    "바닥철거 + 수거": 0, "바닥철거 + 동보행": 0, "수거 + 동보행": 0,
+    "종합철거 + 바닥철거 + 수거": 0, "종합철거 + 바닥철거 + 동보행": 0,
+    "종합철거 + 수거 + 동보행": 0, "바닥철거 + 수거 + 동보행": 0,
+    "종합철거 + 바닥철거 + 수거 + 동보행": 0
+  };
+
+  Object.values(clientServiceMap).forEach(servicesSet => {
+    // 단순 개수 집계 적립
+    const usedCount = servicesSet.size;
+    if(usedCount >= 2) multipleServiceUsers++;
+    if(countCounter[usedCount] !== undefined) {
+      countCounter[usedCount]++;
+    }
+
+    // 상세 15가지 세트 매핑 매칭
+    const arr = Array.from(servicesSet);
+    const hasDemol = arr.includes("종합철거");
+    const hasFloor = arr.includes("바닥철거");
+    const hasPickup = arr.includes("수거");
+    const hasWalk = arr.includes("동보행");
+
+    if (usedCount === 1) {
+      if (hasDemol) comboDict["종합철거"]++;
+      else if (hasFloor) comboDict["바닥철거"]++;
+      else if (hasPickup) comboDict["수거"]++;
+      else if (hasWalk) comboDict["동보행"]++;
+    } else if (usedCount === 2) {
+      if (hasDemol && hasFloor) comboDict["종합철거 + 바닥철거"]++;
+      else if (hasDemol && hasPickup) comboDict["종합철거 + 수거"]++;
+      else if (hasDemol && hasWalk) comboDict["종합철거 + 동보행"]++;
+      else if (hasFloor && hasPickup) comboDict["바닥철거 + 수거"]++;
+      else if (hasFloor && hasWalk) comboDict["바닥철거 + 동보행"]++;
+      else if (hasPickup && hasWalk) comboDict["수거 + 동보행"]++;
+    } else if (usedCount === 3) {
+      if (hasDemol && hasFloor && hasPickup) comboDict["종합철거 + 바닥철거 + 수거"]++;
+      else if (hasDemol && hasFloor && hasWalk) comboDict["종합철거 + 바닥철거 + 동보행"]++;
+      else if (hasDemol && hasPickup && hasWalk) comboDict["종합철거 + 수거 + 동보행"]++;
+      else if (hasFloor && hasPickup && hasWalk) comboDict["바닥철거 + 수거 + 동보행"]++;
+    } else if (usedCount === 4) {
+      comboDict["종합철거 + 바닥철거 + 수거 + 동보행"]++;
+    }
+  });
+
+  // 요약 비율 산출
+  const ratio = ((multipleServiceUsers / activeClientsCount) * 100).toFixed(1);
+  document.getElementById('st-multi-ratio').innerText = `${ratio}%`;
+
+  let maxCount = -1;
+  let topCountKey = 1;
+  Object.entries(countCounter).forEach(([key, count]) => {
+    if(count > maxCount) {
+      maxCount = count;
+      topCountKey = key;
+    }
+  });
+  document.getElementById('st-top-combo').innerText = maxCount > 0 ? `${topCountKey}개 부서 복합 이용 (${maxCount}개사)` : "기록 없음";
+
+  // 렌더링 1: 1개부서~4개부서 단순 개수 집계 바 차트 생성
+  const matrixContainer = document.getElementById('stats-combination-matrix-container');
+  matrixContainer.innerHTML = countPool.map(num => {
+    const count = countCounter[num] || 0;
+    const barPercent = activeClientsCount > 0 ? (count / activeClientsCount) * 100 : 0;
+    let badgeClass = `b-${num}`;
+    let labelText = `${num}개 부서 이용`;
+
+    return `
+      <div class="matrix-row">
+        <div class="matrix-badge-wrap">
+          <span class="mbadge ${badgeClass}"><i class="ti ti-bookmarks"></i> ${labelText}</span>
+        </div>
+        <div class="matrix-bar-container">
+          <div class="matrix-bar-fill" style="width: ${barPercent}%; ${count > 0 && Number(topCountKey) === num ? 'background:linear-gradient(90deg, #7c3aed, #2563eb);' : ''}"></div>
+        </div>
+        <div class="matrix-count">
+          <span style="color:${count > 0 ? 'var(--blue)' : 'var(--text3)'}; font-size:15px; font-weight:800;">${count}</span> <span style="font-size:12px; font-weight:normal; color:var(--text3);">개사</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // 렌더링 2: 15가지 상세 조합 정렬 후 테이블 탑재 (v2.1 복원 처리)
+  const sortedCombos = Object.entries(comboDict).sort((a, b) => b[1] - a[1]);
+  const detailTbody = document.getElementById('stats-detail-combination-tbody');
+  
+  detailTbody.innerHTML = sortedCombos.map((combo, idx) => {
+    const name = combo[0];
+    const val = combo[1];
+    
+    let highlightStyle = "";
+    let rankBadge = `<span class="chip" style="min-width:22px; text-align:center; padding:2px 5px;">${idx + 1}</span>`;
+    
+    if (val > 0 && idx === 0) {
+      highlightStyle = "background: #fdfaf2; font-weight: 700;";
+      rankBadge = `<span class="chip" style="background:var(--amber); border-color:transparent; color:#fff; min-width:22px; text-align:center; font-weight:800; padding:2px 5px;">👑 1</span>`;
+    } else if (val > 0 && idx === 1) {
+      highlightStyle = "background: #fbfbfe;";
+      rankBadge = `<span class="chip" style="background:#60a5fa; border-color:transparent; color:#fff; min-width:22px; text-align:center; font-weight:700; padding:2px 5px;">2</span>`;
+    }
+
+    return `
+      <tr style="${highlightStyle}">
+        <td style="text-align: center; vertical-align: middle;">${rankBadge}</td>
+        <td>
+          <span style="color:${val > 0 ? 'var(--text)' : 'var(--text3)'}; font-size:13px;">
+            ${name}
+          </span>
+        </td>
+        <td style="text-align: right; padding-right: 24px; font-size:14px;">
+          <b style="color:${val > 0 ? 'var(--blue)' : 'var(--text3)'}">${val}</b> <span style="font-size:11px; color:var(--text3); font-weight:normal;">개사</span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function initMonthComparisonFilter(months) {
+  const baseSelect = document.getElementById('compare-base-month');
+  const targetSelect = document.getElementById('compare-target-month');
+  const tbody = document.getElementById('month-comparison-tbody');
+  if(!baseSelect || !targetSelect || !tbody) return;
+
+  if(months.length === 0) {
+    baseSelect.innerHTML = `<option value="">데이터 없음</option>`;
+    targetSelect.innerHTML = `<option value="">데이터 없음</option>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text3); padding:30px 0;">비교할 실적 로그가 없습니다.</td></tr>`;
+    return;
+  }
+
+  const options = months.map(m => `<option value="${m}">${m.replace("-","년 ")}월</option>`).join('');
+  baseSelect.innerHTML = options;
+  targetSelect.innerHTML = options;
+
+  if(months.length > 1) {
+    baseSelect.value = months[1];
+    targetSelect.value = months[0];
+  }
+
+  calculateMonthComparison();
+}
+
+function getMonthlyComparisonMetrics(month) {
+  const orders = salesHistory.filter(s => s.month === month);
+  const uniqueOrders = [];
+  const orderKeys = new Set();
+  const clientServiceMap = {};
+  const deptCounts = { "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0 };
+
+  orders.forEach(order => {
+    const key = order.orderKey || buildOrderKey(order);
+    if(orderKeys.has(key)) return;
+    orderKeys.add(key);
+    uniqueOrders.push(order);
+
+    if(deptCounts[order.dept] !== undefined) deptCounts[order.dept]++;
+    if(!clientServiceMap[order.clientKey]) clientServiceMap[order.clientKey] = new Set();
+    clientServiceMap[order.clientKey].add(order.dept);
+  });
+
+  const activeClients = Object.keys(clientServiceMap).length;
+  const multiClients = Object.values(clientServiceMap).filter(set => set.size >= 2).length;
+  const multiRatio = activeClients > 0 ? Number(((multiClients / activeClients) * 100).toFixed(1)) : 0;
+
+  return {
+    uniqueSites: uniqueOrders.length,
+    activeClients,
+    multiRatio,
+    demol: deptCounts["종합철거"],
+    floor: deptCounts["바닥철거"],
+    pickup: deptCounts["수거"],
+    walk: deptCounts["동보행"]
+  };
+}
+
+function formatComparisonValue(key, value) {
+  if(key === "multiRatio") return `${value}%`;
+  if(key === "activeClients") return `${value.toLocaleString()}개사`;
+  return `${value.toLocaleString()}건`;
+}
+
+function formatComparisonDelta(key, baseValue, targetValue) {
+  const diff = targetValue - baseValue;
+  const sign = diff > 0 ? "+" : "";
+  const suffix = key === "multiRatio" ? "%p" : key === "activeClients" ? "개사" : "건";
+  const color = diff > 0 ? "var(--blue)" : diff < 0 ? "var(--red)" : "var(--text3)";
+  return `<b style="color:${color};">${sign}${diff.toLocaleString()}${suffix}</b>`;
+}
+
+function calculateMonthComparison() {
+  const baseSelect = document.getElementById('compare-base-month');
+  const targetSelect = document.getElementById('compare-target-month');
+  const tbody = document.getElementById('month-comparison-tbody');
+  if(!baseSelect || !targetSelect || !tbody) return;
+
+  const baseMonth = baseSelect.value;
+  const targetMonth = targetSelect.value;
+  if(!baseMonth || !targetMonth) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text3); padding:30px 0;">비교할 월을 선택하세요.</td></tr>`;
+    return;
+  }
+
+  const base = getMonthlyComparisonMetrics(baseMonth);
+  const target = getMonthlyComparisonMetrics(targetMonth);
+  const rows = [
+    ["uniqueSites", "총 순수 현장 접수건"],
+    ["activeClients", "활성 거래처 수"],
+    ["multiRatio", "2개 부서 이상 복합 이용률"],
+    ["demol", "종합철거 고유 현장"],
+    ["floor", "바닥철거 고유 현장"],
+    ["pickup", "수거 고유 현장"],
+    ["walk", "동보행 고유 현장"]
+  ];
+
+  tbody.innerHTML = rows.map(([key, label]) => `
+    <tr>
+      <td>${label}</td>
+      <td style="text-align:right; padding-right:24px;">${formatComparisonValue(key, base[key])}</td>
+      <td style="text-align:right; padding-right:24px;">${formatComparisonValue(key, target[key])}</td>
+      <td style="text-align:right; padding-right:24px;">${formatComparisonDelta(key, base[key], target[key])}</td>
+    </tr>
+  `).join('');
+}
+
+// ══════════ 수금 등급 설정 로직 ══════════
+
+function saveGradeSettings() {
+  const a = parseInt(document.getElementById('grade-a-days').value) || 7;
+  const b = parseInt(document.getElementById('grade-b-days').value) || 14;
+  const c = parseInt(document.getElementById('grade-c-days').value) || 30;
+  if(a >= b || b >= c) {
+    alert('등급 기준 일수는 A < B < C 순서로 설정해야 합니다.\n예) A: 7일, B: 14일, C: 30일');
+    return;
+  }
+  const days = { a, b, c };
+  localStorage.setItem('3s_grade_days', JSON.stringify(days));
+  saveGradeDaysToCloud(days);
+  updateGradeDescriptions();
+  refreshPayGradeSummary();
+  renderClients();
+  showToast('수금 등급 기준이 저장되고 적용되었습니다.');
+}
+
+function loadGradeSettings() {
+  const saved = localStorage.getItem('3s_grade_days');
+  const days = saved ? JSON.parse(saved) : DEFAULT_GRADE_DAYS;
+  document.getElementById('grade-a-days').value = days.a;
+  document.getElementById('grade-b-days').value = days.b;
+  document.getElementById('grade-c-days').value = days.c;
+}
+
+function resetGradeSettings() {
+  document.getElementById('grade-a-days').value = DEFAULT_GRADE_DAYS.a;
+  document.getElementById('grade-b-days').value = DEFAULT_GRADE_DAYS.b;
+  document.getElementById('grade-c-days').value = DEFAULT_GRADE_DAYS.c;
+  updateGradeDescriptions();
+}
+
+function getGradeDays() {
+  const saved = localStorage.getItem('3s_grade_days');
+  return saved ? JSON.parse(saved) : DEFAULT_GRADE_DAYS;
+}
+
+function updateGradeDescriptions() {
+  const a = parseInt(document.getElementById('grade-a-days')?.value) || 7;
+  const b = parseInt(document.getElementById('grade-b-days')?.value) || 14;
+  const c = parseInt(document.getElementById('grade-c-days')?.value) || 30;
+  const da = document.getElementById('desc-a'); if(da) da.textContent = a;
+  const da2 = document.getElementById('desc-a2'); if(da2) da2.textContent = a+1;
+  const db = document.getElementById('desc-b'); if(db) db.textContent = b;
+  const db2 = document.getElementById('desc-b2'); if(db2) db2.textContent = b+1;
+  const dc = document.getElementById('desc-c'); if(dc) dc.textContent = c;
+  const dc2 = document.getElementById('desc-c2'); if(dc2) dc2.textContent = c+1;
+}
+
+/**
+ * 단일 sale 오더의 수금 등급 계산
+ * @returns 'A'|'B'|'C'|'D'|'N'  (N=데이터없음)
+ */
+function calcPayGrade(sale) {
+  const days = getGradeDays();
+  const saleDate = sale.date || sale.month;
+  if(!saleDate || saleDate.length < 7) return 'N';
+
+  if(sale.isUnpaid || !sale.payDate) return 'D';
+
+  const from = new Date(saleDate.length === 7 ? saleDate + '-01' : saleDate);
+  const to = new Date(sale.payDate);
+  if(isNaN(from) || isNaN(to)) return 'N';
+
+  const diff = Math.round((to - from) / (1000 * 60 * 60 * 24));
+  if(diff <= days.a) return 'A';
+  if(diff <= days.b) return 'B';
+  if(diff <= days.c) return 'C';
+  return 'D';
+}
+
+/**
+ * 거래처 전체 수금율 및 대표 등급 계산
+ * 반환: { rate: 0~100, grade: 'A'|'B'|'C'|'D'|'N', paid: n, total: n, avgDays: n }
+ */
+function calcClientPayStats(clientObj) {
+  const sales = getClientSales(clientObj).filter(s => s.price > 0 || s.payAmount > 0 || s.isUnpaid !== undefined);
+  if(sales.length === 0) return { rate: null, grade: 'N', paid: 0, total: 0, avgDays: null };
+
+  let paid = 0, total = sales.length, sumDays = 0, dayCount = 0;
+  const gradeCounts = { A: 0, B: 0, C: 0, D: 0, N: 0 };
+
+  sales.forEach(s => {
+    const g = calcPayGrade(s);
+    gradeCounts[g]++;
+    if(!s.isUnpaid && s.payDate) {
+      paid++;
+      const from = new Date(s.date && s.date.length >= 10 ? s.date : (s.date ? s.date + '-01' : s.month + '-01'));
+      const to = new Date(s.payDate);
+      if(!isNaN(from) && !isNaN(to)) {
+        const diff = Math.round((to - from) / (1000 * 60 * 60 * 24));
+        if(diff >= 0) { sumDays += diff; dayCount++; }
+      }
+    }
+  });
+
+  const rate = total > 0 ? Math.round((paid / total) * 100) : 0;
+  const avgDays = dayCount > 0 ? Math.round(sumDays / dayCount) : null;
+
+  // 대표 등급: 가장 많은 등급 (N 제외, D 최악 우선)
+  let repGrade = 'N';
+  if(gradeCounts.A + gradeCounts.B + gradeCounts.C + gradeCounts.D > 0) {
+    const maxCount = Math.max(gradeCounts.A, gradeCounts.B, gradeCounts.C, gradeCounts.D);
+    if(gradeCounts.D === maxCount) repGrade = 'D';
+    else if(gradeCounts.C === maxCount) repGrade = 'C';
+    else if(gradeCounts.B === maxCount) repGrade = 'B';
+    else repGrade = 'A';
+  }
+
+  return { rate, grade: repGrade, paid, total, avgDays };
+}
+
+function refreshPayGradeSummary() {
+  const counts = { A: 0, B: 0, C: 0, D: 0 };
+  clients.forEach(c => {
+    const stat = calcClientPayStats(c);
+    if(stat.grade !== 'N') counts[stat.grade]++;
+  });
+  const ea = document.getElementById('pg-a-cnt');
+  const eb = document.getElementById('pg-b-cnt');
+  const ec = document.getElementById('pg-c-cnt');
+  const ed = document.getElementById('pg-d-cnt');
+  if(ea) ea.textContent = counts.A;
+  if(eb) eb.textContent = counts.B;
+  if(ec) ec.textContent = counts.C;
+  if(ed) ed.textContent = counts.D;
+}
+
+// ══════════ 거래처 직접 등록 ══════════
+function addClientManually() {
+  const company = document.getElementById('add-company').value.trim();
+  if(!company) { alert('업체명은 필수 입력 항목입니다.'); return; }
+  const manager = document.getElementById('add-manager').value.trim() || '담당자미지정';
+  const phone = document.getElementById('add-phone').value.trim().replace(/[^0-9-]/g, '') || '010-0000-0000';
+  const grade = document.getElementById('add-grade').value;
+  const features = document.getElementById('add-features').value.trim();
+  const note = document.getElementById('add-note').value.trim();
+  const id = `${company}_${manager}_${phone}`;
+  if(clients.find(c => c.id === id)) { alert('동일한 업체명/담당자/연락처 조합의 거래처가 이미 존재합니다.'); return; }
+  clients.push({ id, company, manager, phone, grade, features, note, lastDate: '기록없음', depts: [], salesCount: 0 });
+  save(); renderClients(); refreshPayGradeSummary();
+  document.getElementById('add-company').value = '';
+  document.getElementById('add-manager').value = '';
+  document.getElementById('add-phone').value = '';
+  document.getElementById('add-features').value = '';
+  document.getElementById('add-note').value = '';
+  showToast(`${company} 거래처가 등록되었습니다.`);
+}
+
+// ══════════ CARD RENDER FLOW ══════════
+function renderClients() {
+  const container = document.getElementById('clients-container');
+  if(!container) return;
+
+  const keyword = document.getElementById('search-keyword').value.toLowerCase().trim();
+  const groupFilter = document.getElementById('filter-group').value;
+  const sortOrder = document.getElementById('sort-order').value;
+
+  let filtered = clients.filter(c => {
+    const matchKeyword = c.company.toLowerCase().includes(keyword) || c.manager.toLowerCase().includes(keyword);
+    const matchGroup = groupFilter ? c.grade === groupFilter : true;
+    return matchKeyword && matchGroup;
+  });
+
+  if(sortOrder === 'count-desc') {
+    filtered.sort((a, b) => b.salesCount - a.salesCount);
+  } else if(sortOrder === 'name-asc') {
+    filtered.sort((a, b) => a.company.localeCompare(b.company, 'ko'));
+  } else if(sortOrder === 'date-desc') {
+    filtered.sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+  } else if(sortOrder === 'payrate-asc') {
+    filtered.sort((a, b) => {
+      const ra = calcClientPayStats(a).rate ?? 101;
+      const rb = calcClientPayStats(b).rate ?? 101;
+      return ra - rb;
+    });
+  } else if(sortOrder === 'payrate-desc') {
+    filtered.sort((a, b) => {
+      const ra = calcClientPayStats(a).rate ?? -1;
+      const rb = calcClientPayStats(b).rate ?? -1;
+      return rb - ra;
+    });
+  }
+
+  document.getElementById('client-count-view').innerText = `검색 결과: ${filtered.length}개 카드`;
+
+  if(filtered.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--text3); padding:60px 0;">조건에 부합하는 담당자 카드가 없습니다.</div>`;
+    return;
+  }
+
+  const avThemes = ['av0','av1','av2','av3','av4'];
+
+  container.innerHTML = filtered.map((c, index) => {
+    const avStyle = avThemes[index % avThemes.length];
+    const clientSales = getClientSales(c);
+    const latestDate = getLatestDateFromSales(clientSales);
+    const displayDate = latestDate && latestDate !== "기록없음" ? 
+      (latestDate.length >= 10 ? latestDate.replace(/(\d{4})-(\d{2})-(\d{2})/, "$1년 $2월 $3일") : latestDate.replace("-", "년 ") + "월") : 
+      "기록없음";
+    const noteText = c.note ? c.note.trim() : "등록된 특이사항이 없습니다.";
+    
+    const deptCounts = { "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0 };
+    const seenSites = new Set();
+
+    clientSales.forEach(s => {
+      const uKey = `${s.month}_${s.dept}_${s.address}`;
+      if(!seenSites.has(uKey) && deptCounts[s.dept] !== undefined) {
+        seenSites.add(uKey);
+        deptCounts[s.dept]++;
+      }
+    });
+
+    const sortedDepts = Object.keys(deptCounts).filter(d => c.depts.includes(d)).sort((a, b) => deptCounts[b] - deptCounts[a]);
+
+    // 수금 통계 계산
+    const payStat = calcClientPayStats(c);
+    const gradeLabel = { A:'A', B:'B', C:'C', D:'D', N:'-' };
+    const gradeCssMap = { A:'pgA', B:'pgB', C:'pgC', D:'pgD', N:'pgN' };
+    const barColorMap = { A:'pay-bar-green', B:'pay-bar-blue', C:'pay-bar-amber', D:'pay-bar-red', N:'pay-bar-gray' };
+    const gradeIconMap = { A:'ti-shield-check', B:'ti-shield-half', C:'ti-shield-pause', D:'ti-shield-x', N:'ti-shield' };
+    const payGradeCss = gradeCssMap[payStat.grade];
+    const payBarColor = barColorMap[payStat.grade];
+    const payRateDisplay = payStat.rate !== null ? `${payStat.rate}%` : '-';
+    const payDetailText = payStat.total > 0
+      ? `${payStat.paid}건 수금 / ${payStat.total}건 전체${payStat.avgDays !== null ? ` · 평균 ${payStat.avgDays}일` : ''}`
+      : '수금 데이터 없음';
+    
+    return `
+      <div class="cc g${c.grade}" onclick="openEditModal('${c.id}', event)">
+        <div class="cc-head">
+          <div class="cc-avatar ${avStyle}">${c.company.substring(0,2)}</div>
+          <div class="cc-name-block">
+            <div class="cc-name" title="${c.company}">${c.company}</div>
+            <div class="cc-mgr"><i class="ti ti-user-circle"></i>${c.manager}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <span class="gp g${c.grade}">${c.grade} 등급</span>
+            ${payStat.grade !== 'N' ? `<span class="pgrade ${payGradeCss}" title="수금등급"><i class="ti ${gradeIconMap[payStat.grade]}" style="font-size:9px;"></i>수금 ${gradeLabel[payStat.grade]}</span>` : ''}
+          </div>
+        </div>
+        <div class="cc-divider"></div>
+        <div class="cc-body">
+          <div class="ir">
+            <span class="ik">고유 연락처</span>
+            <span class="iv" style="color:var(--blue); font-size:12px;">${c.phone}</span>
+          </div>
+          <div class="ir">
+            <span class="ik">최근 거래일</span>
+            <span class="iv"><span class="chip" style="font-size:11px;">${displayDate}</span></span>
+          </div>
+          ${c.features ? `
+          <div class="ir">
+            <span class="ik">업체 특징</span>
+            <span class="iv" style="font-weight:500; color:var(--teal); font-size:12px;">${c.features}</span>
+          </div>` : ''}
+          <div class="ir">
+            <span class="ik">우선 부서군</span>
+            <div class="dtags">
+              ${sortedDepts.map((d, i) => {
+                const isTop = i === 0 && deptCounts[d] > 0;
+                return `<span class="dt r2">${isTop ? '👑 ' : ''}${d}</span>`;
+              }).join('')}
+            </div>
+          </div>
+          <!-- 수금율 섹션 -->
+          <div class="ir" style="flex-direction:column; gap:4px; align-items:stretch;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="ik" style="margin-top:0;">수금율</span>
+              <span style="font-size:12px; font-weight:700; color:${payStat.rate !== null ? (payStat.rate >= 80 ? 'var(--green)' : payStat.rate >= 50 ? 'var(--blue)' : 'var(--red)') : 'var(--text3)'};">${payRateDisplay}</span>
+            </div>
+            <div class="pay-bar-wrap">
+              <div class="pay-bar-fill ${payBarColor}" style="width:${payStat.rate !== null ? payStat.rate : 0}%;"></div>
+            </div>
+            <div style="font-size:10px; color:var(--text3);">${payDetailText}</div>
+          </div>
+          <div class="fg" style="margin-top:4px;">
+            <span class="fl" style="font-size:11px; color:var(--text3);"><i class="ti ti-note"></i> 특이사항(자유메모)</span>
+            <div class="cc-note-area">${noteText}</div>
+          </div>
+        </div>
+        <div class="cc-foot" onclick="event.stopPropagation();">
+          <div class="sales-lbl" onclick="openDeptModal('${c.id}')">
+            순수 현장수: <b style="font-size:14px;">${c.salesCount}현장</b> <i class="ti ti-external-link" style="font-size:12px; margin-left:2px;"></i>
+          </div>
+          <div class="cc-btns">
+            <button class="ibt" onclick="openEditModal('${c.id}', event)" title="상세 편집"><i class="ti ti-edit"></i></button>
+            <button class="ibt del" onclick="deleteClient('${c.id}')" title="카드 삭제"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openEditModal(clientId, event) {
+  if(event) event.stopPropagation();
+  const clientObj = clients.find(c => c.id === clientId);
+  if(!clientObj) return;
+
+  document.getElementById('edit-client-id').value = clientObj.id;
+  document.getElementById('edit-company').value = clientObj.company;
+  document.getElementById('edit-manager').value = clientObj.manager;
+  document.getElementById('edit-phone').value = clientObj.phone;
+  document.getElementById('edit-grade').value = clientObj.grade;
+  document.getElementById('edit-features').value = clientObj.features || '';
+  document.getElementById('edit-note').value = clientObj.note || '';
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); }
+
+function saveClientEdit() {
+  const id = document.getElementById('edit-client-id').value;
+  const clientObj = clients.find(c => c.id === id);
+  if(!clientObj) return;
+
+  const newMgr = document.getElementById('edit-manager').value.trim();
+  const newPhone = document.getElementById('edit-phone').value.trim().replace(/[^0-9-]/g, "");
+
+  clientObj.manager = newMgr || "담당자미지정";
+  clientObj.phone = newPhone || "010-0000-0000";
+  clientObj.grade = document.getElementById('edit-grade').value;
+  clientObj.features = document.getElementById('edit-features').value.trim();
+  clientObj.note = document.getElementById('edit-note').value.trim();
+
+  const newId = `${clientObj.company}_${clientObj.manager}_${clientObj.phone}`;
+  if(id !== newId) {
+    salesHistory.forEach(s => { if(s.clientKey === id) s.clientKey = newId; });
+    clientObj.id = newId;
+  }
+
+  recalculateAllClientCounts();
+  save(); closeEditModal(); refreshDashboard(); renderClients();
+  showToast(`${clientObj.company} 프로필 저장 완료.`);
+}
+
+function openDeptModal(clientId) {
+  const clientObj = clients.find(c => c.id === clientId);
+  if(!clientObj) return;
+
+  document.getElementById('m-client-title').innerText = clientObj.company;
+  document.getElementById('m-client-mgr').innerText = clientObj.manager;
+  document.getElementById('m-client-phone').innerText = clientObj.phone;
+
+  const subSales = salesHistory.filter(s => s.clientKey === clientId);
+  const counts = { "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0 };
+  const seenSites = new Set();
+
+  subSales.forEach(s => {
+    const uKey = `${s.month}_${s.dept}_${s.address}`;
+    if(!seenSites.has(uKey) && counts[s.dept] !== undefined) {
+      seenSites.add(uKey);
+      counts[s.dept]++;
+    }
+  });
+
+  document.getElementById('m-cnt-demol').innerHTML = `${counts["종합철거"]} <span>건</span>`;
+  document.getElementById('m-cnt-floor').innerHTML = `${counts["바닥철거"]} <span>건</span>`;
+  document.getElementById('m-cnt-pickup').innerHTML = `${counts["수거"]} <span>건</span>`;
+  document.getElementById('m-cnt-walk').innerHTML = `${counts["동보행"]} <span>건</span>`;
+
+  document.getElementById('dept-modal').classList.add('open');
+}
+
+function closeDeptModal() { document.getElementById('dept-modal').classList.remove('open'); }
+
+function deleteClient(clientId) {
+  if(!confirm('해당 담당자 카드를 삭제하시겠습니까?')) return;
+  clients = clients.filter(c => c.id !== clientId);
+  salesHistory = salesHistory.filter(s => s.clientKey !== clientId);
+  sbRemoveClient(clientId);
+  save(); refreshDashboard(); renderClients();
+  showToast('거래처 카드가 삭제되었습니다.');
+}
+
+function exportExcel() {
+  if(clients.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
+  const rows = clients.map(c => {
+    const clientSales = salesHistory.filter(s => s.clientKey === c.id);
+    const deptCounts = { "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0 };
+    const seen = new Set();
+    clientSales.forEach(s => {
+      const uKey = `${s.month}_${s.dept}_${s.address}`;
+      if(!seen.has(uKey) && deptCounts[s.dept] !== undefined) {
+        seen.add(uKey);
+        deptCounts[s.dept]++;
+      }
+    });
+    const sortedDepts = Object.keys(deptCounts).filter(d => c.depts.includes(d)).sort((a, b) => deptCounts[b] - deptCounts[a]);
+
+    return {
+      업체명: c.company,
+      담당자: c.manager,
+      연락처: c.phone,
+      거래처등급: c.grade,
+      업체특징: c.features || '',
+      최근거래월: c.lastDate,
+      우선순위부서군: sortedDepts.join(' > '),
+      순수고유현장수: c.salesCount,
+      특이사항: c.note || ''
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '3S거래처마스터');
+  XLSX.writeFile(wb, `3S_고유현장_거래처마스터_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('엑셀 고유 마스터 반출 완료.');
+}
+
+function backupData() {
+  const blob = new Blob([JSON.stringify({clients, salesHistory, fileHistory}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `3S_ERP_백업파일_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('로컬 백업 완료.');
+}
+
+function restoreData(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.clients || !data.salesHistory) throw new Error();
+      if(!confirm(`백업 시점 데이터를 복원하시겠습니까?`)) return;
+      clients = data.clients;
+      salesHistory = data.salesHistory;
+      fileHistory = data.fileHistory || [];
+      migrateStoredData();
+      recalculateAllClientCounts();
+      save(); refreshDashboard(); renderFileHistory(); renderClients();
+      showToast('데이터베이스 복원이 정상 완료되었습니다.');
+    } catch(err) {
+      alert('유효하지 않은 파일입니다.');
+    }
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
