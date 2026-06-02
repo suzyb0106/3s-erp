@@ -126,7 +126,27 @@ body { font-family: 'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:
 .count-lbl { font-size: 12px; color: var(--text2); margin-left: auto; font-weight: 500; }
 
 /* CARDS GRID */
-.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(315px, 1fr)); gap: 15px; }
+.cards-grid { display: flex; flex-direction: column; gap: 8px; }
+
+/* 업체 행 (한 줄 미리보기) */
+.company-row { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); box-shadow: var(--shadow); cursor: pointer; transition: all 0.18s; overflow: hidden; }
+.company-row:hover { border-color: var(--blue); box-shadow: 0 2px 12px rgba(37,99,235,0.10); }
+.company-row.open { border-color: var(--blue); }
+.company-row-header { display: flex; align-items: center; gap: 12px; padding: 13px 18px; }
+.company-row-avatar { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; letter-spacing: -0.5px; }
+.company-row-name { font-size: 15px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.company-row-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.company-row-mgr-count { font-size: 12px; color: var(--text2); background: var(--bg); border-radius: 20px; padding: 3px 10px; border: 1px solid var(--border); }
+.company-row-sale { font-size: 12px; color: var(--blue); font-weight: 600; }
+.company-row-date { font-size: 11px; color: var(--text3); }
+.company-row-chevron { font-size: 16px; color: var(--text3); transition: transform 0.2s; margin-left: 4px; }
+.company-row.open .company-row-chevron { transform: rotate(180deg); }
+.company-row-grades { display: flex; gap: 4px; }
+
+/* 담당자 카드 패널 (펼쳐지는 영역) */
+.company-cards-panel { display: none; padding: 0 14px 14px; }
+.company-cards-panel.open { display: block; }
+.company-cards-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 12px; margin-top: 4px; }
 
 /* CLIENT CARD */
 .cc { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; cursor: pointer; transition: all 0.2s; position: relative; box-shadow: var(--shadow); }
@@ -1959,151 +1979,134 @@ function addClientManually() {
 }
 
 // ══════════ CARD RENDER FLOW ══════════
+function buildClientCard(c, index) {
+  const avThemes = ['av0','av1','av2','av3','av4'];
+  const avStyle = avThemes[index % avThemes.length];
+  const clientSales = getClientSales(c);
+  const latestDate = getLatestDateFromSales(clientSales);
+  const displayDate = latestDate && latestDate !== "기록없음" ? 
+    (latestDate.length >= 10 ? latestDate.replace(/(\d{4})-(\d{2})-(\d{2})/, "$1년 $2월 $3일") : latestDate.replace("-", "년 ") + "월") : 
+    "기록없음";
+  const noteText = c.note ? c.note.trim() : "등록된 특이사항이 없습니다.";
+  const deptCounts = { "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0 };
+  const seenSites = new Set();
+  clientSales.forEach(s => {
+    const uKey = `${s.month}_${s.dept}_${s.address}`;
+    if(!seenSites.has(uKey) && deptCounts[s.dept] !== undefined) { seenSites.add(uKey); deptCounts[s.dept]++; }
+  });
+  const sortedDepts = Object.keys(deptCounts).filter(d => c.depts.includes(d)).sort((a, b) => deptCounts[b] - deptCounts[a]);
+  const payStat = calcClientPayStats(c);
+  const gradeLabel = { A:'A', B:'B', C:'C', D:'D', N:'-' };
+  const gradeCssMap = { A:'pgA', B:'pgB', C:'pgC', D:'pgD', N:'pgN' };
+  const barColorMap = { A:'pay-bar-green', B:'pay-bar-blue', C:'pay-bar-amber', D:'pay-bar-red', N:'pay-bar-gray' };
+  const gradeIconMap = { A:'ti-shield-check', B:'ti-shield-half', C:'ti-shield-pause', D:'ti-shield-x', N:'ti-shield' };
+  const payGradeCss = gradeCssMap[payStat.grade];
+  const payBarColor = barColorMap[payStat.grade];
+  const payRateDisplay = payStat.rate !== null ? `${payStat.rate}%` : '-';
+  const payDetailText = payStat.total > 0 ? `${payStat.paid}건 수금 / ${payStat.total}건 전체${payStat.avgDays !== null ? ` · 평균 ${payStat.avgDays}일` : ''}` : '수금 데이터 없음';
+  return `
+    <div class="cc g${c.grade}" onclick="openEditModal('${c.id}', event)">
+      <div class="cc-head">
+        <div class="cc-avatar ${avStyle}">${c.company.substring(0,2)}</div>
+        <div class="cc-name-block">
+          <div class="cc-name" title="${c.company}">${c.company}</div>
+          <div class="cc-mgr"><i class="ti ti-user-circle"></i>${c.manager}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+          <span class="gp g${c.grade}">${c.grade} 등급</span>
+          ${payStat.grade !== 'N' ? `<span class="pgrade ${payGradeCss}" title="수금등급"><i class="ti ${gradeIconMap[payStat.grade]}" style="font-size:9px;"></i>수금 ${gradeLabel[payStat.grade]}</span>` : ''}
+        </div>
+      </div>
+      <div class="cc-divider"></div>
+      <div class="cc-body">
+        <div class="ir"><span class="ik">고유 연락처</span><span class="iv" style="color:var(--blue); font-size:12px;">${c.phone}</span></div>
+        <div class="ir"><span class="ik">최근 거래일</span><span class="iv"><span class="chip" style="font-size:11px;">${displayDate}</span></span></div>
+        ${c.features ? `<div class="ir"><span class="ik">업체 특징</span><span class="iv" style="font-weight:500; color:var(--teal); font-size:12px;">${c.features}</span></div>` : ''}
+        <div class="ir"><span class="ik">우선 부서군</span><div class="dtags">${sortedDepts.map((d,i)=>`<span class="dt r2">${i===0&&deptCounts[d]>0?'👑 ':''}${d}</span>`).join('')}</div></div>
+        <div class="ir" style="flex-direction:column; gap:4px; align-items:stretch;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="ik" style="margin-top:0;">수금율</span>
+            <span style="font-size:12px; font-weight:700; color:${payStat.rate!==null?(payStat.rate>=80?'var(--green)':payStat.rate>=50?'var(--blue)':'var(--red)'):'var(--text3)'};">${payRateDisplay}</span>
+          </div>
+          <div class="pay-bar-wrap"><div class="pay-bar-fill ${payBarColor}" style="width:${payStat.rate!==null?payStat.rate:0}%;"></div></div>
+          <div style="font-size:10px; color:var(--text3);">${payDetailText}</div>
+        </div>
+        <div class="fg" style="margin-top:4px;"><span class="fl" style="font-size:11px; color:var(--text3);"><i class="ti ti-note"></i> 특이사항(자유메모)</span><div class="cc-note-area">${noteText}</div></div>
+      </div>
+      <div class="cc-foot" onclick="event.stopPropagation();">
+        <div class="sales-lbl" onclick="openDeptModal('${c.id}')">순수 현장수: <b style="font-size:14px;">${c.salesCount}현장</b> <i class="ti ti-external-link" style="font-size:12px; margin-left:2px;"></i></div>
+        <div class="cc-btns">
+          <button class="ibt" onclick="openEditModal('${c.id}', event)" title="상세 편집"><i class="ti ti-edit"></i></button>
+          <button class="ibt del" onclick="deleteClient('${c.id}')" title="카드 삭제"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCompanyRow(companyName) {
+  const safeId = 'company_' + companyName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+  const row = document.getElementById('row_' + safeId);
+  const panel = document.getElementById('panel_' + safeId);
+  if(!row || !panel) return;
+  const isOpen = row.classList.contains('open');
+  row.classList.toggle('open', !isOpen);
+  panel.classList.toggle('open', !isOpen);
+}
+
 function renderClients() {
   const container = document.getElementById('clients-container');
   if(!container) return;
-
   const keyword = document.getElementById('search-keyword').value.toLowerCase().trim();
   const groupFilter = document.getElementById('filter-group').value;
   const sortOrder = document.getElementById('sort-order').value;
-
   let filtered = clients.filter(c => {
     const matchKeyword = c.company.toLowerCase().includes(keyword) || c.manager.toLowerCase().includes(keyword);
     const matchGroup = groupFilter ? c.grade === groupFilter : true;
     return matchKeyword && matchGroup;
   });
-
-  if(sortOrder === 'count-desc') {
-    filtered.sort((a, b) => b.salesCount - a.salesCount);
-  } else if(sortOrder === 'name-asc') {
-    filtered.sort((a, b) => a.company.localeCompare(b.company, 'ko'));
-  } else if(sortOrder === 'date-desc') {
-    filtered.sort((a, b) => b.lastDate.localeCompare(a.lastDate));
-  } else if(sortOrder === 'payrate-asc') {
-    filtered.sort((a, b) => {
-      const ra = calcClientPayStats(a).rate ?? 101;
-      const rb = calcClientPayStats(b).rate ?? 101;
-      return ra - rb;
-    });
-  } else if(sortOrder === 'payrate-desc') {
-    filtered.sort((a, b) => {
-      const ra = calcClientPayStats(a).rate ?? -1;
-      const rb = calcClientPayStats(b).rate ?? -1;
-      return rb - ra;
-    });
-  }
-
-  document.getElementById('client-count-view').innerText = `검색 결과: ${filtered.length}개 카드`;
-
-  if(filtered.length === 0) {
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:var(--text3); padding:60px 0;">조건에 부합하는 담당자 카드가 없습니다.</div>`;
-    return;
-  }
-
+  const companyMap = new Map();
+  filtered.forEach(c => { if(!companyMap.has(c.company)) companyMap.set(c.company, []); companyMap.get(c.company).push(c); });
+  let companies = Array.from(companyMap.entries());
+  if(sortOrder === 'count-desc') companies.sort((a,b)=>b[1].reduce((s,c)=>s+c.salesCount,0)-a[1].reduce((s,c)=>s+c.salesCount,0));
+  else if(sortOrder === 'name-asc') companies.sort((a,b)=>a[0].localeCompare(b[0],'ko'));
+  else if(sortOrder === 'date-desc') companies.sort((a,b)=>{const da=a[1].map(c=>c.lastDate).filter(d=>d&&d!=="기록없음").sort().pop()||'';const db=b[1].map(c=>c.lastDate).filter(d=>d&&d!=="기록없음").sort().pop()||'';return db.localeCompare(da);});
+  else if(sortOrder === 'payrate-asc') companies.sort((a,b)=>Math.min(...a[1].map(c=>calcClientPayStats(c).rate??101))-Math.min(...b[1].map(c=>calcClientPayStats(c).rate??101)));
+  else if(sortOrder === 'payrate-desc') companies.sort((a,b)=>Math.max(...b[1].map(c=>calcClientPayStats(c).rate??-1))-Math.max(...a[1].map(c=>calcClientPayStats(c).rate??-1)));
+  document.getElementById('client-count-view').innerText = `검색 결과: ${companies.length}개 업체 / 총 ${filtered.length}명 담당자`;
+  if(companies.length === 0) { container.innerHTML = `<div style="text-align:center; color:var(--text3); padding:60px 0;">조건에 부합하는 업체가 없습니다.</div>`; return; }
   const avThemes = ['av0','av1','av2','av3','av4'];
-
-  container.innerHTML = filtered.map((c, index) => {
-    const avStyle = avThemes[index % avThemes.length];
-    const clientSales = getClientSales(c);
-    const latestDate = getLatestDateFromSales(clientSales);
-    const displayDate = latestDate && latestDate !== "기록없음" ? 
-      (latestDate.length >= 10 ? latestDate.replace(/(\d{4})-(\d{2})-(\d{2})/, "$1년 $2월 $3일") : latestDate.replace("-", "년 ") + "월") : 
-      "기록없음";
-    const noteText = c.note ? c.note.trim() : "등록된 특이사항이 없습니다.";
-    
-    const deptCounts = { "종합철거": 0, "바닥철거": 0, "수거": 0, "동보행": 0 };
-    const seenSites = new Set();
-
-    clientSales.forEach(s => {
-      const uKey = `${s.month}_${s.dept}_${s.address}`;
-      if(!seenSites.has(uKey) && deptCounts[s.dept] !== undefined) {
-        seenSites.add(uKey);
-        deptCounts[s.dept]++;
-      }
-    });
-
-    const sortedDepts = Object.keys(deptCounts).filter(d => c.depts.includes(d)).sort((a, b) => deptCounts[b] - deptCounts[a]);
-
-    // 수금 통계 계산
-    const payStat = calcClientPayStats(c);
-    const gradeLabel = { A:'A', B:'B', C:'C', D:'D', N:'-' };
-    const gradeCssMap = { A:'pgA', B:'pgB', C:'pgC', D:'pgD', N:'pgN' };
-    const barColorMap = { A:'pay-bar-green', B:'pay-bar-blue', C:'pay-bar-amber', D:'pay-bar-red', N:'pay-bar-gray' };
-    const gradeIconMap = { A:'ti-shield-check', B:'ti-shield-half', C:'ti-shield-pause', D:'ti-shield-x', N:'ti-shield' };
-    const payGradeCss = gradeCssMap[payStat.grade];
-    const payBarColor = barColorMap[payStat.grade];
-    const payRateDisplay = payStat.rate !== null ? `${payStat.rate}%` : '-';
-    const payDetailText = payStat.total > 0
-      ? `${payStat.paid}건 수금 / ${payStat.total}건 전체${payStat.avgDays !== null ? ` · 평균 ${payStat.avgDays}일` : ''}`
-      : '수금 데이터 없음';
-    
+  const gradeBadge = g => `<span class="gp ${{S:'gS',A:'gA',B:'gB',C:'gC'}[g]||''}" style="font-size:10px; padding:1px 6px;">${g}</span>`;
+  const autoOpen = keyword.length > 0;
+  container.innerHTML = companies.map(([companyName, cList], ci) => {
+    const safeId = 'company_' + companyName.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+    const avStyle = avThemes[ci % avThemes.length];
+    const totalSales = cList.reduce((s,c)=>s+c.salesCount,0);
+    const latestDate = cList.map(c=>c.lastDate).filter(d=>d&&d!=="기록없음").sort().pop()||'';
+    const displayDate = latestDate ? (latestDate.length>=10?latestDate.replace(/(\d{4})-(\d{2})-(\d{2})/,"$1년 $2월 $3일"):latestDate.replace("-","년 ")+"월") : "기록없음";
+    const uniqueGrades = [...new Set(cList.map(c=>c.grade))].sort();
+    const isOpen = autoOpen;
+    const cardHtml = cList.map((c,idx)=>buildClientCard(c,idx)).join('');
     return `
-      <div class="cc g${c.grade}" onclick="openEditModal('${c.id}', event)">
-        <div class="cc-head">
-          <div class="cc-avatar ${avStyle}">${c.company.substring(0,2)}</div>
-          <div class="cc-name-block">
-            <div class="cc-name" title="${c.company}">${c.company}</div>
-            <div class="cc-mgr"><i class="ti ti-user-circle"></i>${c.manager}</div>
+      <div class="company-row${isOpen?' open':''}" id="row_${safeId}">
+        <div class="company-row-header" onclick="toggleCompanyRow('${companyName.replace(/'/g,"\\'")}')">
+          <div class="company-row-avatar ${avStyle}">${companyName.substring(0,2)}</div>
+          <div class="company-row-name" title="${companyName}">${companyName}</div>
+          <div class="company-row-meta">
+            <div class="company-row-grades">${uniqueGrades.map(gradeBadge).join('')}</div>
+            <span class="company-row-mgr-count"><i class="ti ti-users" style="font-size:11px;"></i> 담당자 ${cList.length}명</span>
+            <span class="company-row-sale">${totalSales}현장</span>
+            <span class="company-row-date">${displayDate}</span>
           </div>
-          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-            <span class="gp g${c.grade}">${c.grade} 등급</span>
-            ${payStat.grade !== 'N' ? `<span class="pgrade ${payGradeCss}" title="수금등급"><i class="ti ${gradeIconMap[payStat.grade]}" style="font-size:9px;"></i>수금 ${gradeLabel[payStat.grade]}</span>` : ''}
-          </div>
+          <i class="ti ti-chevron-down company-row-chevron"></i>
         </div>
-        <div class="cc-divider"></div>
-        <div class="cc-body">
-          <div class="ir">
-            <span class="ik">고유 연락처</span>
-            <span class="iv" style="color:var(--blue); font-size:12px;">${c.phone}</span>
-          </div>
-          <div class="ir">
-            <span class="ik">최근 거래일</span>
-            <span class="iv"><span class="chip" style="font-size:11px;">${displayDate}</span></span>
-          </div>
-          ${c.features ? `
-          <div class="ir">
-            <span class="ik">업체 특징</span>
-            <span class="iv" style="font-weight:500; color:var(--teal); font-size:12px;">${c.features}</span>
-          </div>` : ''}
-          <div class="ir">
-            <span class="ik">우선 부서군</span>
-            <div class="dtags">
-              ${sortedDepts.map((d, i) => {
-                const isTop = i === 0 && deptCounts[d] > 0;
-                return `<span class="dt r2">${isTop ? '👑 ' : ''}${d}</span>`;
-              }).join('')}
-            </div>
-          </div>
-          <!-- 수금율 섹션 -->
-          <div class="ir" style="flex-direction:column; gap:4px; align-items:stretch;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span class="ik" style="margin-top:0;">수금율</span>
-              <span style="font-size:12px; font-weight:700; color:${payStat.rate !== null ? (payStat.rate >= 80 ? 'var(--green)' : payStat.rate >= 50 ? 'var(--blue)' : 'var(--red)') : 'var(--text3)'};">${payRateDisplay}</span>
-            </div>
-            <div class="pay-bar-wrap">
-              <div class="pay-bar-fill ${payBarColor}" style="width:${payStat.rate !== null ? payStat.rate : 0}%;"></div>
-            </div>
-            <div style="font-size:10px; color:var(--text3);">${payDetailText}</div>
-          </div>
-          <div class="fg" style="margin-top:4px;">
-            <span class="fl" style="font-size:11px; color:var(--text3);"><i class="ti ti-note"></i> 특이사항(자유메모)</span>
-            <div class="cc-note-area">${noteText}</div>
-          </div>
-        </div>
-        <div class="cc-foot" onclick="event.stopPropagation();">
-          <div class="sales-lbl" onclick="openDeptModal('${c.id}')">
-            순수 현장수: <b style="font-size:14px;">${c.salesCount}현장</b> <i class="ti ti-external-link" style="font-size:12px; margin-left:2px;"></i>
-          </div>
-          <div class="cc-btns">
-            <button class="ibt" onclick="openEditModal('${c.id}', event)" title="상세 편집"><i class="ti ti-edit"></i></button>
-            <button class="ibt del" onclick="deleteClient('${c.id}')" title="카드 삭제"><i class="ti ti-trash"></i></button>
-          </div>
+        <div class="company-cards-panel${isOpen?' open':''}" id="panel_${safeId}">
+          <div class="company-cards-inner">${cardHtml}</div>
         </div>
       </div>
     `;
   }).join('');
 }
-
 function openEditModal(clientId, event) {
   if(event) event.stopPropagation();
   const clientObj = clients.find(c => c.id === clientId);
