@@ -2255,5 +2255,95 @@ function restoreData(input) {
   reader.readAsText(file);
 }
 </script>
+
+<style>
+.mgr-btn{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;border:1.5px solid #3b82f6;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;margin-left:5px;font-family:inherit;line-height:1.5;vertical-align:middle;transition:background .15s;}
+.mgr-btn:hover{background:#dbeafe;}
+#mgr-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;align-items:center;justify-content:center;}
+#mgr-ov.on{display:flex;}
+#mgr-box{background:#fff;border-radius:16px;width:min(500px,93vw);max-height:78vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.22);animation:mgpop .17s cubic-bezier(.4,0,.2,1);}
+@keyframes mgpop{from{transform:scale(.93);opacity:0}to{transform:scale(1);opacity:1}}
+#mgr-hd{padding:16px 18px 12px;border-bottom:1px solid #e5e7eb;background:#f8fafc;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#mgr-co{font-size:16px;font-weight:700;color:#111827;flex:1;}
+#mgr-cnt{font-size:12px;background:#dbeafe;color:#1d4ed8;padding:2px 9px;border-radius:999px;font-weight:600;}
+#mgr-cl{width:26px;height:26px;border-radius:50%;border:none;background:#f1f5f9;cursor:pointer;font-size:15px;color:#6b7280;display:flex;align-items:center;justify-content:center;}
+#mgr-cl:hover{background:#e2e8f0;}
+#mgr-si{padding:10px 18px;border-bottom:1px solid #f0f0f0;flex-shrink:0;}
+#mgr-si input{width:100%;box-sizing:border-box;padding:7px 12px 7px 34px;border:1.5px solid #d1d5db;border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;}
+#mgr-si input:focus{border-color:#3b82f6;}
+#mgr-lst{overflow-y:auto;flex:1;}
+.mgr-row{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid #f3f4f6;}
+.mgr-row:last-child{border-bottom:none;}
+.mgr-row:hover{background:#f8fafc;}
+.mgr-av{width:36px;height:36px;border-radius:50%;background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mgr-inf{flex:1;min-width:0;}
+.mgr-nm{font-size:13px;font-weight:600;color:#111827;margin-bottom:2px;}
+.mgr-ph{font-size:12px;color:#6b7280;}
+.mgr-pg{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;flex-shrink:0;}
+.pg-A{background:#dcfce7;color:#166534;}.pg-B{background:#dbeafe;color:#1d4ed8;}.pg-C{background:#fef9c3;color:#a16207;}.pg-D{background:#fee2e2;color:#991b1b;}
+.mgr-sc{font-size:11px;color:#9ca3af;flex-shrink:0;}
+.mgr-empty{padding:32px;text-align:center;color:#9ca3af;font-size:13px;}
+</style>
+<div id="mgr-ov"><div id="mgr-box">
+  <div id="mgr-hd"><span id="mgr-co"></span><span id="mgr-cnt">0명</span><button id="mgr-cl">✕</button></div>
+  <div id="mgr-si"><input id="mgr-inp" type="text" placeholder="담당자명 또는 연락처 검색..."></div>
+  <div id="mgr-lst"></div>
+</div></div>
+<script>
+(function(){
+  const ov=document.getElementById('mgr-ov');
+  document.getElementById('mgr-cl').addEventListener('click',closeMgr);
+  ov.addEventListener('click',e=>{if(e.target===ov)closeMgr();});
+  function closeMgr(){ov.classList.remove('on');document.onkeydown=null;}
+  function openMgr(companyName){
+    const seen=new Set(),managers=[];
+    document.querySelectorAll('.cc').forEach(card=>{
+      const nm=card.querySelector('.cc-name')?.textContent.trim();
+      if(nm!==companyName)return;
+      const name=card.querySelector('.cc-mgr')?.textContent.trim()||'';
+      const phone=[...card.querySelectorAll('.iv')].find(el=>/01[0-9]/.test(el.textContent))?.textContent.trim()||'';
+      const payGrade=card.querySelector('[class*="pgrade"]')?.textContent.replace('수금','').trim()||'';
+      const sceneText=card.textContent.match(/순수 현장수[:\s]*([\d]+)/)?.[1]||'';
+      const key=name+'|'+phone;
+      if(!seen.has(key)){seen.add(key);managers.push({name,phone,payGrade,scenes:sceneText});}
+    });
+    document.getElementById('mgr-co').textContent=companyName;
+    document.getElementById('mgr-inp').value='';
+    renderList(managers,'');
+    ov.classList.add('on');
+    document.getElementById('mgr-inp').oninput=e=>renderList(managers,e.target.value.trim());
+    document.onkeydown=e=>{if(e.key==='Escape')closeMgr();};
+    setTimeout(()=>document.getElementById('mgr-inp').focus(),100);
+  }
+  function renderList(managers,kw){
+    const lst=document.getElementById('mgr-lst');
+    const k=kw.toLowerCase();
+    const filtered=managers.filter(m=>!k||m.name.toLowerCase().includes(k)||m.phone.replace(/-/g,'').includes(k.replace(/-/g,'')));
+    document.getElementById('mgr-cnt').textContent=filtered.length+'명';
+    if(!filtered.length){lst.innerHTML='<div class="mgr-empty">'+(kw?'"'+kw+'" 검색 결과 없음':'담당자 없음')+'</div>';return;}
+    lst.innerHTML=filtered.map(m=>{
+      const grade=(m.payGrade.match(/[A-D]/)||[''])[0];
+      return '<div class="mgr-row"><div class="mgr-av">'+(m.name?m.name.charAt(0):'?')+'</div><div class="mgr-inf"><div class="mgr-nm">'+(m.name||'-')+'</div><div class="mgr-ph">'+(m.phone||'연락처 없음')+'</div></div>'+(grade?'<span class="mgr-pg pg-'+grade+'">수금 '+grade+'</span>':'')+(m.scenes?'<span class="mgr-sc">'+m.scenes+'현장</span>':'')+'</div>';
+    }).join('');
+  }
+  function injectBtn(cc){
+    if(cc.dataset.mgrDone)return;
+    cc.dataset.mgrDone='1';
+    const ccName=cc.querySelector('.cc-name');
+    if(!ccName)return;
+    const companyName=ccName.textContent.trim();
+    if(!companyName)return;
+    const btn=document.createElement('button');
+    btn.className='mgr-btn';
+    btn.textContent='👥 담당자';
+    btn.addEventListener('click',e=>{e.stopPropagation();openMgr(companyName);});
+    ccName.after(btn);
+  }
+  function init(){document.querySelectorAll('.cc').forEach(injectBtn);}
+  const obs=new MutationObserver(muts=>muts.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.classList?.contains('cc'))injectBtn(n);n.querySelectorAll?.('.cc').forEach(injectBtn);})));
+  obs.observe(document.body,{childList:true,subtree:true});
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();setTimeout(init,2000);setTimeout(init,5000);}
+})();
+</script>
 </body>
 </html>
